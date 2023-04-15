@@ -81,7 +81,6 @@ public class ReportMenu {
             LocalDateTime dateTimeFrom;
             LocalDateTime dateTimeTo;
 
-
             if (pickerFrom.getDate().equals(pickerTo.getDate())) {
                 dateTimeFrom = pickerFrom.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
                 dateTimeTo = dateTimeFrom.plusDays(1);
@@ -108,8 +107,15 @@ public class ReportMenu {
         button.addActionListener(e -> {
             String outPath;
 
+            UIManager.put("FileChooser.cancelButtonText","Отмена");
+            JFileChooser chooser = new JFileChooser(config.getOutPath()) {
+                @Override
+                public void setDialogType(int dialogType) {
+                    super.setDialogType(dialogType);
+                    setApproveButtonText("Сохранить");
+                }
+            };
 
-            JFileChooser chooser = new JFileChooser(config.getOutPath());
             chooser.setDialogTitle("Выберите директорию");
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
 
