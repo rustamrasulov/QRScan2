@@ -3,6 +3,7 @@ package com.miirrr.qrscan.views;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.miirrr.qrscan.config.Config;
+import com.miirrr.qrscan.entities.Shop;
 import com.miirrr.qrscan.services.engine.ReportExport;
 import com.miirrr.qrscan.services.entities.ShopService;
 import com.miirrr.qrscan.services.entities.ShopServiceImpl;
@@ -21,10 +22,13 @@ import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.Vector;
+import java.util.Set;
 
 public class ReportMenu {
 
@@ -73,7 +77,18 @@ public class ReportMenu {
 
     private void setIpBox() {
         defaultComboBoxIpModel.addElement("ВСЕ");
-        shopService.findAll().stream().map(s -> s.getIpName()).distinct().sorted().forEach(s -> defaultComboBoxIpModel.addElement(s));
+        List<String> toSort = new ArrayList<>();
+        Set<String> uniqueValues = new HashSet<>();
+        for (Shop s : shopService.findAll()) {
+            String ipName = s.getIpName();
+            if (uniqueValues.add(ipName)) {
+                toSort.add(ipName);
+            }
+        }
+        toSort.sort(null);
+        for (String ipName : toSort) {
+            defaultComboBoxIpModel.addElement(ipName);
+        }
     }
 
     private void setFilterButtonAction(JButton button) {
@@ -171,17 +186,14 @@ public class ReportMenu {
         ipBox = new CustomComboBox<String>();
         ipBox.setPreferredSize(new Dimension(50, 50));
         ipBox.setBorder(LineBorder.createGrayLineBorder());
-
         Font cityBoxFont = this.$$$getFont$$$(null, -1, 32, ipBox.getFont());
         if (cityBoxFont != null) ipBox.setFont(cityBoxFont);
         defaultComboBoxIpModel = new DefaultComboBoxModel<>();
         ipBox.setModel(defaultComboBoxIpModel);
         boxPanel.add(ipBox, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-
         JPanel datePanel = new JPanel();
         datePanel.setLayout(new GridLayoutManager(1, 4, new Insets(0, 0, 0, 0), -1, -1));
         topPanel.add(datePanel, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
-
         pickerFrom = new JXDatePicker();
         pickerTo = new JXDatePicker();
         pickerFrom.setDate(Calendar.getInstance().getTime());
@@ -193,25 +205,20 @@ public class ReportMenu {
         if (pickerFont != null) pickerTo.setFont(pickerFont);
         datePanel.add(pickerFrom, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(280, -1), new Dimension(280, -1), new Dimension(280, -1), 0, false));
         datePanel.add(pickerTo, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(280, -1), new Dimension(280, -1), new Dimension(280, -1), 0, false));
-
         JXMonthView monthViewFrom = pickerFrom.getMonthView();
         JXMonthView monthViewTo = pickerTo.getMonthView();
         monthViewFrom.setFont(pickerFont);
         monthViewTo.setFont(pickerFont);
-
         filterButton = new JButton();
         Font filterButtonFont = this.$$$getFont$$$(null, Font.BOLD, 24, filterButton.getFont());
         if (filterButtonFont != null) filterButton.setFont(filterButtonFont);
         filterButton.setText("ПРИМЕНИТЬ");
         datePanel.add(filterButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(200, 56), new Dimension(200, 56), new Dimension(200, 56), 0, false));
-
         saveButton = new JButton();
         Font saveButtonFont = this.$$$getFont$$$(null, Font.BOLD, 24, saveButton.getFont());
         if (saveButtonFont != null) saveButton.setFont(saveButtonFont);
         saveButton.setText("СОХРАНИТЬ");
         datePanel.add(saveButton, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(200, 56), new Dimension(200, 56), new Dimension(200, 56), 0, false));
-
-
         positionTablePane = new JScrollPane();
         rootPanel.add(positionTablePane, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
         positionTable = PositionTable.getInstance(LocalDateTime.now().toLocalDate().atStartOfDay(), LocalDateTime.now().toLocalDate().atStartOfDay().plusDays(1));
@@ -226,35 +233,20 @@ public class ReportMenu {
         bottomPanel.add(closeButton, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(-1, 56), new Dimension(-1, 56), new Dimension(-1, 56), 0, false));
     }
 
-    private class CustomComboBox<T> extends JComboBox<T> {
+    private static class CustomComboBox<T> extends JComboBox<T> {
         public CustomComboBox() {
             super();
             init();
         }
 
-        public CustomComboBox(ComboBoxModel<T> aModel) {
-            super(aModel);
-            init();
-        }
-
-        public CustomComboBox(T[] items) {
-            super(items);
-            init();
-        }
-
-        public CustomComboBox(Vector<T> items) {
-            super(items);
-            init();
-        }
-
         public void init() {
-            CustomComboBoxUI ccbui = new CustomComboBoxUI();
-            setUI(ccbui);
+            CustomComboBoxUI ccbUi = new CustomComboBoxUI();
+            setUI(ccbUi);
         }
 
     }
 
-    private class CustomComboBoxUI extends BasicComboBoxUI {
+    private static class CustomComboBoxUI extends BasicComboBoxUI {
         protected ComboPopup createPopup() {
             return new CustomComboBoxPopup(comboBox);
         }
@@ -262,8 +254,8 @@ public class ReportMenu {
     }
 
     private static class CustomComboBoxPopup extends BasicComboPopup {
-        public CustomComboBoxPopup(JComboBox<? extends Object> combo) {
-            super(combo);
+        public CustomComboBoxPopup(JComboBox<?> combo) {
+            super((JComboBox<Object>) combo);
         }
 
         @Override

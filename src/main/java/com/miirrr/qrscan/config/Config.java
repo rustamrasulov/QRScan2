@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Properties;
@@ -45,13 +44,6 @@ public class Config {
         assert logoURL != null;
         return new ImageIcon(logoURL).getImage();
     }
-
-    public ImageIcon getImageIcon() {
-        URL logoURL = getClass().getResource("/images/logo2.png");
-        assert logoURL != null;
-        return new ImageIcon(logoURL);
-    }
-
 
     public String getDbUrl() {
         String dbUrl = getProperties().getProperty("dbUrl");

@@ -72,7 +72,7 @@ public class ReportExport implements Job {
                 }
             }
         } else {
-            for (Shop s : shopService.findAll().stream().filter(s -> s.getInn().equals(ipInn)).collect(Collectors.toList())) {
+            for (Shop s : shopService.findAll().stream().filter(s -> s.getInn().equals(ipInn)).toList()) {
                 ArrayList<String> positionNames = positionService
                         .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
                         .stream().map(Position::getName).collect(Collectors.toCollection(ArrayList::new));

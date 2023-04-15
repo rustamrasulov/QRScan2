@@ -1,8 +1,5 @@
 package com.miirrr.qrscan.views.tables;
 
-import com.miirrr.qrscan.services.entities.CityService;
-import com.miirrr.qrscan.services.entities.CityServiceImpl;
-
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -15,8 +12,6 @@ import java.util.List;
 public class ShopTable extends JTable {
 
     private static final DefaultTableModel tableModel = ShopTableModel.getInstance();
-
-    private static final CityService cityService = new CityServiceImpl();
 
     private static JTable INSTANCE;
 

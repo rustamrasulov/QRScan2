@@ -14,18 +14,9 @@ public class ShopServiceImpl implements ShopService {
         shopRepository = new ShopRepositoryImpl();
     }
 
-
     @Override
     public Shop save(Shop shop) {
-        boolean isNew = true;
-        for (Shop s: shopRepository.findAll()) {
-            if (s.getShopCorpId().equals(shop.getShopCorpId())) {
-                isNew = false;
-                break;
-            }
-        }
         return shopRepository.save(shop);
-
     }
 
     @Override
@@ -42,11 +33,6 @@ public class ShopServiceImpl implements ShopService {
     public Shop findById(Long id) {
         return shopRepository.findById(id);
     }
-
-//    @Override
-//    public Store findByName(String name) {
-//        return storeRepository.findByName(name);
-//    }
 
     @Override
     public List<Shop> findAll() {

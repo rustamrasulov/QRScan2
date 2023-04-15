@@ -44,7 +44,6 @@ public class ParseShopImpl implements ParseShop {
         try {
             JsonNode jsonNode = mapper.readTree((webService.request("getshopslist")));
             if (!jsonNode.toString().contains("code")) {
-                final int[] count = {0};
 
                 JsonNode jsonArray = jsonNode.get("shopslist");
                 jsonArray.forEach(j -> {
@@ -54,26 +53,11 @@ public class ParseShopImpl implements ParseShop {
                     String cityName = j.get("city").asText();
                     if(cityName.length() == 0) cityName = "Все";
 
-//                    String cityName = j.get("city").asText();
-//                    switch (count[0] % 4) {
-//                        case 0: cityName = "Сургут";
-//                        break;
-//                        case 1: cityName = "Пыть-Ях";
-//                        break;
-//                        case 2: cityName = "Нижневартовск";
-//                        break;
-//                        case 3: cityName = "Нефтеюганск";
-//                        break;
-//                    }
-//
-//                    count[0]++;
                     City city = cityService.findByName(cityName);
                     if(city == null) {
                         city = cityService.save(new City(cityName));
                     }
 
-
-//                    System.err.println(j.get("id").asText() + ": " + j.get("name").asText());
                     Shop shop  = shopService.findByName(j.get("name").asText());
                     if(shop == null) {
                         shopService.save(new Shop(

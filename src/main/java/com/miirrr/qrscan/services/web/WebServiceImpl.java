@@ -6,12 +6,12 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
 
 import javax.swing.*;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 public class WebServiceImpl implements WebService{
 
@@ -56,7 +56,7 @@ public class WebServiceImpl implements WebService{
              CloseableHttpResponse response = httpClient.execute(post)
         ) {
             if (response.getStatusLine().getStatusCode() >= 200 && response.getStatusLine().getStatusCode() <= 300 && response.getEntity().getContentLength() > 0) {
-                result = EntityUtils.toString(response.getEntity(), HTTP.UTF_8);
+                result = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
             } else {
                 result = "ERROR";
             }

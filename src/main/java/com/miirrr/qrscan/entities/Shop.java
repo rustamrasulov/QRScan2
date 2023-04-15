@@ -50,11 +50,6 @@ public class Shop extends BaseEntity {
     @Column(name = "ip")
     private String ipName;
 
-//    @JsonProperty("city")
-//    @NonNull
-//    @Column(name = "city")
-//    private String city;
-
     @ManyToOne
     @NonNull
     @JoinColumn(name = "city_id", referencedColumnName = "id")

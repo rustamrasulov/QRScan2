@@ -30,7 +30,6 @@ public class PositionTable extends JTable {
     }
 
     public static JTable getInstance(LocalDateTime startDate, LocalDateTime endDate, Long storeId) {
-
         return createTable(makeInstance(), startDate, endDate, storeId);
     }
 
@@ -67,10 +66,6 @@ public class PositionTable extends JTable {
         INSTANCE.setFocusable(false);
 
         return INSTANCE;
-    }
-
-    public static void updateTable(LocalDateTime startDate, LocalDateTime endDate, Long storeId) {
-        createTable(INSTANCE, startDate, endDate, storeId);
     }
 
     private static JTable createTable(JTable table, LocalDateTime startDate, LocalDateTime endDate, Long storeId) {
