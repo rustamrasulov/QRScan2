@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,6 +46,28 @@ public class ReportExport implements Job {
     public void execute(JobExecutionContext jobExecutionContext) {
         LocalDateTime dateTime = LocalDateTime.now().toLocalDate().atStartOfDay().plusDays(1);
         export(dateTime.minusWeeks(1), dateTime, null, null);
+    }
+
+    public void exportShop(Shop shop, String newInn) {
+        LocalDateTime startOfWeek = LocalDateTime.now().with(ChronoField.DAY_OF_WEEK, 1).toLocalDate().atStartOfDay();
+        LocalDateTime dateFrom = LocalDateTime.now().toLocalDate().atStartOfDay().minusWeeks(1);
+        LocalDateTime dateTo = LocalDateTime.now().toLocalDate().atStartOfDay().plusDays(1);
+
+        Map<String, ExportClass> positionsToExport = new HashMap<>();
+        ArrayList<String> positionNames = positionService.findByDateAndShopId(dateFrom, dateTo, shop.getId())
+                .stream().map(Position::getName).collect(Collectors.toCollection(ArrayList::new));
+        if (!positionNames.isEmpty()) {
+            ExportClass exportClass = new ExportClass();
+            exportClass.setInn(shop.getInn());
+            exportClass.setIpName(shop.getIpName());
+            exportClass.setPositionNames(positionNames);
+            positionsToExport.put(shop.getInn(), exportClass);
+
+            String fileName = config.getOutPath() + "/" + shop.getShopCorpId() + "_" + shop.getIpName() + "_" + shop.getInn() + "_to_" + newInn + "_"
+                    + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".xls";
+
+            saveExcel(positionsToExport, fileName);
+        }
     }
 
     public void export(LocalDateTime dateFrom, LocalDateTime dateTo, String ipInn, String path) {
@@ -85,15 +108,20 @@ public class ReportExport implements Job {
                 }
             }
         }
-        if (!positionsToExport.isEmpty()) saveExcel(positionsToExport);
+        if (!positionsToExport.isEmpty()) saveExcel(positionsToExport, null);
     }
 
-    private void saveExcel(Map<String, ExportClass> exportClassMap) {
+    private void saveExcel(Map<String, ExportClass> exportClassMap, String fileName) {
 
         exportClassMap.forEach((inn, shop) -> {
                     short rowCount = 0;
-                    String filename = outPath + "/" + shop.getIpName() + "_" + shop.getInn() + "_"
-                            + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".xls";
+
+                    String _fileName = fileName;
+                    if (fileName == null) {
+                        _fileName = outPath + "/" + shop.getIpName() + "_" + shop.getInn() + "_"
+                                + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".xls";
+                    }
+
                     HSSFWorkbook workbook = new HSSFWorkbook();
                     HSSFSheet sheet = workbook.createSheet(shop.getInn());
 
@@ -104,7 +132,7 @@ public class ReportExport implements Job {
                     }
 
                     try {
-                        FileOutputStream fileOut = new FileOutputStream(filename);
+                        FileOutputStream fileOut = new FileOutputStream(_fileName);
                         workbook.write(fileOut);
                         fileOut.close();
                         workbook.close();

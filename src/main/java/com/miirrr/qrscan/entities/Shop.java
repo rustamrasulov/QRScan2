@@ -47,6 +47,7 @@ public class Shop extends BaseEntity {
 
 
     @JsonProperty("ip")
+    @NonNull
     @Column(name = "ip")
     private String ipName;
 

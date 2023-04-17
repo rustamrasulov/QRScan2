@@ -9,6 +9,7 @@ public interface PositionRepository extends BaseRepository<Position>{
 
 
     List<Position> getByDate(LocalDateTime dateFrom, LocalDateTime dateTo);
+
     List<Position> getByDateAndShopINN(LocalDateTime dateFrom, LocalDateTime dateTo, String inn);
 
     List<Position> getByDateAndShopId(LocalDateTime dateFrom, LocalDateTime dateTo, long shopId);

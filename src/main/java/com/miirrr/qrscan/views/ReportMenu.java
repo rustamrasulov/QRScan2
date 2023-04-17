@@ -3,6 +3,7 @@ package com.miirrr.qrscan.views;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.miirrr.qrscan.config.Config;
+import com.miirrr.qrscan.entities.City;
 import com.miirrr.qrscan.entities.Shop;
 import com.miirrr.qrscan.services.engine.ReportExport;
 import com.miirrr.qrscan.services.entities.ShopService;
@@ -80,7 +81,7 @@ public class ReportMenu {
         List<String> toSort = new ArrayList<>();
         Set<String> uniqueValues = new HashSet<>();
         for (Shop s : shopService.findAll()) {
-            String ipName = s.getIpName();
+            String ipName = s.getIpName() + " (" + s.getInn() + ")";
             if (uniqueValues.add(ipName)) {
                 toSort.add(ipName);
             }
@@ -107,7 +108,9 @@ public class ReportMenu {
             if ((Objects.requireNonNull(ipBox.getSelectedItem())).toString().equals("ВСЕ")) {
                 positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo);
             } else {
-                positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo, getIpBoxValue());
+                String[] inn = ipBox.getSelectedItem().toString().split("[()]");
+//                System.out.println(inn[1]);
+                positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo, inn[1]);
             }
         });
     }
@@ -152,7 +155,8 @@ public class ReportMenu {
                 if ((Objects.requireNonNull(ipBox.getSelectedItem())).toString().equals("ВСЕ")) {
                     reportExport.export(dateTimeFrom, dateTimeTo, null, outPath);
                 } else {
-                    reportExport.export(dateTimeFrom, dateTimeTo, getIpBoxValue(), outPath);
+                    String[] inn = ipBox.getSelectedItem().toString().split("[()]");
+                    reportExport.export(dateTimeFrom, dateTimeTo, inn[1], outPath);
                 }
             }
         });

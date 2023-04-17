@@ -50,7 +50,10 @@ public class ParseShopImpl implements ParseShop {
 
 
 
-                    String cityName = j.get("city").asText();
+                    String cityName = j.get("city").asText()
+                            .replace(" (СКЛАД)", "")
+                            .replace("НИЖНЕВАРТОВСК", "Н-ВАРТОВСК")
+                            .replace("НОВЫЙ УРЕНГОЙ", "Н. УРЕНГОЙ");
                     if(cityName.length() == 0) cityName = "Все";
 
                     City city = cityService.findByName(cityName);
@@ -64,13 +67,30 @@ public class ParseShopImpl implements ParseShop {
                                 j.get("id").asText(),
                                 j.get("name").asText(),
                                 j.get("inn").asText(),
+                                j.get("ip").asText(),
                                 city
                         ));
+                    } else if (!shop.getInn().equals(j.get("inn").asText())) {
+                        String inn = j.get("inn").asText();
+
+                        ReportExport reportExport = new ReportExport();
+                        reportExport.exportShop(shop, inn);
+
+                        shop.setInn(inn);
+                        shop.setIpName(j.get("ip").asText());
+                        shopService.save(shop);
                     }
                 });
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        for(City c : cityService.findAll()) {
+            if(c.getShops().isEmpty()) {
+                cityService.deleteById(c.getId());
+            }
+        }
+
     }
 }
