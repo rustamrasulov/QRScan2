@@ -3,7 +3,6 @@ package com.miirrr.qrscan.views;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.miirrr.qrscan.config.Config;
-import com.miirrr.qrscan.entities.City;
 import com.miirrr.qrscan.entities.Shop;
 import com.miirrr.qrscan.services.engine.ReportExport;
 import com.miirrr.qrscan.services.entities.ShopService;
