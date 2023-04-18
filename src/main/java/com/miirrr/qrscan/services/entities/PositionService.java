@@ -15,6 +15,8 @@ public interface PositionService {
 
     Position findById(Long id);
 
+    Position findByName(String name);
+
     List<Position> findAll();
 
     List<Position> findByDateAndShopId(LocalDateTime dateFrom, LocalDateTime dateTo, Long shopId);

@@ -41,15 +41,13 @@ public class ParseShopImpl implements ParseShop {
     @Override
     public void loadStores() {
         ObjectMapper mapper = new ObjectMapper();
+
         try {
             JsonNode jsonNode = mapper.readTree((webService.request("getshopslist")));
             if (!jsonNode.toString().contains("code")) {
 
                 JsonNode jsonArray = jsonNode.get("shopslist");
                 jsonArray.forEach(j -> {
-
-
-
                     String cityName = j.get("city").asText()
                             .replace(" (СКЛАД)", "")
                             .replace("НИЖНЕВАРТОВСК", "Н-ВАРТОВСК")
@@ -78,6 +76,7 @@ public class ParseShopImpl implements ParseShop {
 
                         shop.setInn(inn);
                         shop.setIpName(j.get("ip").asText());
+
                         shopService.save(shop);
                     }
                 });

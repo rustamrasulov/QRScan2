@@ -107,17 +107,18 @@ public class ReportMenu {
             if ((Objects.requireNonNull(ipBox.getSelectedItem())).toString().equals("ВСЕ")) {
                 positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo);
             } else {
-                String[] inn = ipBox.getSelectedItem().toString().split("[()]");
-//                System.out.println(inn[1]);
-                positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo, inn[1]);
+                positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo, getIpBoxValue());
             }
         });
     }
 
     private String getIpBoxValue() {
-        return Objects.requireNonNull(shopService.findAll().stream()
-                .filter(s -> s.getIpName().equals(Objects.requireNonNull(ipBox.getSelectedItem()).toString()))
-                .findFirst().orElse(null)).getInn();
+        String[] inn = ipBox.getSelectedItem().toString().split("[()]");
+        return inn[1];
+
+//        return Objects.requireNonNull(shopService.findAll().stream()
+//                .filter(s -> s.getIpName().equals(Objects.requireNonNull(ipBox.getSelectedItem()).toString()))
+//                .findFirst().orElse(null)).getInn();
     }
 
     private void setSaveButtonAction(JButton button) {
@@ -153,9 +154,11 @@ public class ReportMenu {
                 }
                 if ((Objects.requireNonNull(ipBox.getSelectedItem())).toString().equals("ВСЕ")) {
                     reportExport.export(dateTimeFrom, dateTimeTo, null, outPath);
+                    positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo);
                 } else {
-                    String[] inn = ipBox.getSelectedItem().toString().split("[()]");
-                    reportExport.export(dateTimeFrom, dateTimeTo, inn[1], outPath);
+                    reportExport.export(dateTimeFrom, dateTimeTo, getIpBoxValue(), outPath);
+                    ipBox.setSelectedIndex(0);
+                    positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo);
                 }
             }
         });

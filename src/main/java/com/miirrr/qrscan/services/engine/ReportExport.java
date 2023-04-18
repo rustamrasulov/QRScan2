@@ -23,6 +23,7 @@ import java.time.temporal.ChronoField;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 @Log4j2
@@ -63,10 +64,13 @@ public class ReportExport implements Job {
             exportClass.setPositionNames(positionNames);
             positionsToExport.put(shop.getInn(), exportClass);
 
-            String fileName = config.getOutPath() + "/" + shop.getShopCorpId() + "_" + shop.getIpName() + "_" + shop.getInn() + "_to_" + newInn + "_"
+            String fileName = config.getOutPath() + "/" + shop.getShopCorpId() + "_"
+                    + shop.getIpName() + "_" + shop.getInn() + "_to_" + newInn + "_"
                     + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".xls";
 
-            saveExcel(positionsToExport, fileName);
+            if (saveExcel(positionsToExport, fileName)) {
+                deletePositions(positionsToExport);
+            }
         }
     }
 
@@ -108,11 +112,22 @@ public class ReportExport implements Job {
                 }
             }
         }
-        if (!positionsToExport.isEmpty()) saveExcel(positionsToExport, null);
+
+        if (!positionsToExport.isEmpty()) {
+            if (saveExcel(positionsToExport, null)) {
+                deletePositions(positionsToExport);
+            }
+        }
     }
 
-    private void saveExcel(Map<String, ExportClass> exportClassMap, String fileName) {
+    private void deletePositions(Map<String, ExportClass> exportClassMap) {
+        exportClassMap.values().forEach(e ->  e.getPositionNames()
+                .forEach(s -> positionService.deleteById(positionService.findByName(s).getId()))
+        );
+    }
 
+    private boolean saveExcel(Map<String, ExportClass> exportClassMap, String fileName) {
+        AtomicBoolean saved = new AtomicBoolean(false);
         exportClassMap.forEach((inn, shop) -> {
                     short rowCount = 0;
 
@@ -136,10 +151,12 @@ public class ReportExport implements Job {
                         workbook.write(fileOut);
                         fileOut.close();
                         workbook.close();
+                        saved.set(true);
                     } catch (IOException e) {
                         log.error(e.getLocalizedMessage());
                     }
                 }
         );
+        return saved.get();
     }
 }
