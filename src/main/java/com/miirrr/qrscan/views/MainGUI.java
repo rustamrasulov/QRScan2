@@ -47,7 +47,8 @@ public class MainGUI {
     public MainGUI() {
         JFrame mainFrame = new JFrame();
         mainFrame.setIconImage(config.getLogoImage());
-
+        mainFrame.setMinimumSize(new Dimension(1000, 700));
+        mainFrame.setLocationRelativeTo(null);
         qrcodeField.requestFocus();
 
         actionCityTable(cityTable);

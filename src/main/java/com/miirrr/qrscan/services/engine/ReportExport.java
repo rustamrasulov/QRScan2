@@ -1,6 +1,7 @@
 package com.miirrr.qrscan.services.engine;
 
 import com.miirrr.qrscan.config.Config;
+import com.miirrr.qrscan.entities.BaseEntity;
 import com.miirrr.qrscan.entities.Position;
 import com.miirrr.qrscan.entities.Shop;
 import com.miirrr.qrscan.services.entities.PositionService;
@@ -19,8 +20,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoField;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -46,17 +45,17 @@ public class ReportExport implements Job {
     @Override
     public void execute(JobExecutionContext jobExecutionContext) {
         LocalDateTime dateTime = LocalDateTime.now().toLocalDate().atStartOfDay().plusDays(1);
-        export(dateTime.minusWeeks(1), dateTime, null, null);
+        export(dateTime.minusWeeks(1), dateTime, null, null, true);
     }
 
     public void exportShop(Shop shop, String newInn) {
-        LocalDateTime startOfWeek = LocalDateTime.now().with(ChronoField.DAY_OF_WEEK, 1).toLocalDate().atStartOfDay();
+//        LocalDateTime startOfWeek = LocalDateTime.now().with(ChronoField.DAY_OF_WEEK, 1).toLocalDate().atStartOfDay();
         LocalDateTime dateFrom = LocalDateTime.now().toLocalDate().atStartOfDay().minusWeeks(1);
         LocalDateTime dateTo = LocalDateTime.now().toLocalDate().atStartOfDay().plusDays(1);
 
         Map<String, ExportClass> positionsToExport = new HashMap<>();
-        ArrayList<String> positionNames = positionService.findByDateAndShopId(dateFrom, dateTo, shop.getId())
-                .stream().map(Position::getName).collect(Collectors.toCollection(ArrayList::new));
+        Map<Long, String> positionNames = positionService.findByDateAndShopId(dateFrom, dateTo, shop.getId())
+                .stream().collect(Collectors.toMap(BaseEntity::getId, Position::getName));
         if (!positionNames.isEmpty()) {
             ExportClass exportClass = new ExportClass();
             exportClass.setInn(shop.getInn());
@@ -69,12 +68,12 @@ public class ReportExport implements Job {
                     + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".xls";
 
             if (saveExcel(positionsToExport, fileName)) {
-                deletePositions(positionsToExport);
+                updatePositions(positionsToExport);
             }
         }
     }
 
-    public void export(LocalDateTime dateFrom, LocalDateTime dateTo, String ipInn, String path) {
+    public void export(LocalDateTime dateFrom, LocalDateTime dateTo, String ipInn, String path, boolean scheduled) {
         if (path == null) {
             outPath = config.getOutPath();
         } else {
@@ -86,9 +85,16 @@ public class ReportExport implements Job {
         if (ipInn == null) {
             for (Shop s : shopService.findAll()) {
                 if (!positionsToExport.containsKey(s.getInn())) {
-                    ArrayList<String> positionNames = positionService
-                            .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
-                            .stream().map(Position::getName).collect(Collectors.toCollection(ArrayList::new));
+                    Map<Long, String> positionNames;
+                    if (scheduled) {
+                        positionNames = positionService
+                                .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
+                                .stream().filter(p -> !p.isScheduled()).collect(Collectors.toMap(BaseEntity::getId, Position::getName));
+                    } else {
+                        positionNames = positionService
+                                .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
+                                .stream().collect(Collectors.toMap(BaseEntity::getId, Position::getName));
+                    }
                     if (!positionNames.isEmpty()) {
                         ExportClass exportClass = new ExportClass();
                         exportClass.setInn(s.getInn());
@@ -100,9 +106,9 @@ public class ReportExport implements Job {
             }
         } else {
             for (Shop s : shopService.findAll().stream().filter(s -> s.getInn().equals(ipInn)).toList()) {
-                ArrayList<String> positionNames = positionService
+                Map<Long, String> positionNames = positionService
                         .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
-                        .stream().map(Position::getName).collect(Collectors.toCollection(ArrayList::new));
+                        .stream().collect(Collectors.toMap(BaseEntity::getId, Position::getName));
                 if (!positionNames.isEmpty()) {
                     ExportClass exportClass = new ExportClass();
                     exportClass.setInn(s.getInn());
@@ -114,22 +120,27 @@ public class ReportExport implements Job {
         }
 
         if (!positionsToExport.isEmpty()) {
-            if (saveExcel(positionsToExport, null)) {
-                deletePositions(positionsToExport);
+            if (saveExcel(positionsToExport, null) && scheduled) {
+                updatePositions(positionsToExport);
             }
         }
     }
 
-    private void deletePositions(Map<String, ExportClass> exportClassMap) {
-        exportClassMap.values().forEach(e ->  e.getPositionNames()
-                .forEach(s -> positionService.deleteById(positionService.findByName(s).getId()))
+    private void updatePositions(Map<String, ExportClass> exportClassMap) {
+        exportClassMap.values().forEach(e -> e.getPositionNames()
+                .forEach((id, name) -> {
+                            Position position = positionService.findById(id);
+                            position.setScheduled(true);
+                            positionService.save(position);
+                        }
+                )
         );
     }
 
     private boolean saveExcel(Map<String, ExportClass> exportClassMap, String fileName) {
         AtomicBoolean saved = new AtomicBoolean(false);
         exportClassMap.forEach((inn, shop) -> {
-                    short rowCount = 0;
+                    final short[] rowCount = {0};
 
                     String _fileName = fileName;
                     if (fileName == null) {
@@ -140,11 +151,11 @@ public class ReportExport implements Job {
                     HSSFWorkbook workbook = new HSSFWorkbook();
                     HSSFSheet sheet = workbook.createSheet(shop.getInn());
 
-                    for (String positionName : shop.getPositionNames()) {
-                        HSSFRow row = sheet.createRow(rowCount);
-                        row.createCell(0).setCellValue(positionName);
-                        rowCount++;
-                    }
+                    shop.getPositionNames().forEach((k, v) -> {
+                        HSSFRow row = sheet.createRow(rowCount[0]);
+                        row.createCell(0).setCellValue(v);
+                        rowCount[0]++;
+                    });
 
                     try {
                         FileOutputStream fileOut = new FileOutputStream(_fileName);

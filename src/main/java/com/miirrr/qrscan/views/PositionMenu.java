@@ -21,6 +21,8 @@ public class PositionMenu {
 
     public PositionMenu(LocalDateTime dateFrom, LocalDateTime dateTo, Long shopId) {
         JDialog mainFrame = new JDialog();
+        mainFrame.setMinimumSize(new Dimension(1000, 700));
+        mainFrame.setLocationRelativeTo(null);
         mainFrame.setIconImage(config.getLogoImage());
         mainFrame.setModal(true);
         mainFrame.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);

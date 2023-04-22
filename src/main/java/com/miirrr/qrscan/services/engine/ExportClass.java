@@ -4,7 +4,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.List;
+import java.util.Map;
 
 @Data
 @Getter
@@ -12,5 +12,5 @@ import java.util.List;
 public class ExportClass {
     private String inn;
     private String ipName;
-    private List<String> positionNames;
+    private Map<Long, String> positionNames;
 }

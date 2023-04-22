@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 
 @AllArgsConstructor
 @RequiredArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor(force = true)
 @Getter
 @Setter
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -32,12 +32,17 @@ public class Position extends BaseEntity{
     private String name;
 
     @ManyToOne
+    @NonNull
     @JoinColumn(name = "shop_id", referencedColumnName = "id")
     private Shop shop;
 
     @Column(name = "date")
     @NonNull
     private LocalDateTime date;
+
+
+    @Column(name = "scheduled")
+    private boolean isScheduled;
 
     @Override
     public boolean equals(Object o) {

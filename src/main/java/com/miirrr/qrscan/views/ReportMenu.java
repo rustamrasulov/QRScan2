@@ -56,6 +56,8 @@ public class ReportMenu {
 
     public ReportMenu() {
         mainFrame = new JDialog();
+        mainFrame.setMinimumSize(new Dimension(1000, 700));
+        mainFrame.setLocationRelativeTo(null);
         mainFrame.setIconImage(config.getLogoImage());
         mainFrame.setModal(true);
         mainFrame.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
@@ -153,10 +155,10 @@ public class ReportMenu {
                     dateTimeTo = pickerTo.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().plusDays(1);
                 }
                 if ((Objects.requireNonNull(ipBox.getSelectedItem())).toString().equals("ВСЕ")) {
-                    reportExport.export(dateTimeFrom, dateTimeTo, null, outPath);
+                    reportExport.export(dateTimeFrom, dateTimeTo, null, outPath, false);
                     positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo);
                 } else {
-                    reportExport.export(dateTimeFrom, dateTimeTo, getIpBoxValue(), outPath);
+                    reportExport.export(dateTimeFrom, dateTimeTo, getIpBoxValue(), outPath, false);
                     ipBox.setSelectedIndex(0);
                     positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo);
                 }
