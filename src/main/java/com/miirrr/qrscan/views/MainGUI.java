@@ -69,15 +69,19 @@ public class MainGUI {
         textField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                if ((e.getKeyCode() == 10) && (shopTable.getSelectedRow() > -1)) {
+                int selectedRow = shopTable.getSelectedRow();
+                if ((e.getKeyCode() == 10) && (selectedRow > -1)) {
                     long shopId = Long.parseLong(String.valueOf(shopTable.getValueAt(shopTable.getSelectedRow(), 0)));
 
                     positionService.save(textField.getText(), shopId);
 
-                    shopTable.getSelectionModel().clearSelection();
+//                    shopTable.getSelectionModel().clearSelection();
                     showMessage(textField.getText(), shopService.findById(shopId).getName());
                     textField.setText("");
-                    textField.setEnabled(false);
+//                    textField.setEnabled(false);
+
+                    shopTable.getSelectionModel().setSelectionInterval(selectedRow, selectedRow);
+                    textField.requestFocus();
                 }
             }
         });
@@ -108,7 +112,8 @@ public class MainGUI {
 
     private void actionShopTable(JTable table) {
         table.getSelectionModel().addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting() && table.getSelectedRow() > -1) {
+//            if (!e.getValueIsAdjusting() && table.getSelectedRow() > -1) {
+            if (table.getSelectedRow() > -1) {
                 qrcodeField.setEnabled(true);
                 qrcodeField.requestFocus();
             }
