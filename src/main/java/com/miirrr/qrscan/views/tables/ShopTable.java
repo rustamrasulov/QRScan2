@@ -1,6 +1,7 @@
 package com.miirrr.qrscan.views.tables;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableModel;
@@ -34,6 +35,10 @@ public class ShopTable extends JTable {
         sorter.setSortKeys(sortKeys);
 
         INSTANCE.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        INSTANCE.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
 
         INSTANCE.setRowHeight(60);
         INSTANCE.setFont(new Font("", Font.BOLD, 28));

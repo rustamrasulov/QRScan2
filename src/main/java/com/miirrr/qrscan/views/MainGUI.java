@@ -3,6 +3,7 @@ package com.miirrr.qrscan.views;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.miirrr.qrscan.config.Config;
+import com.miirrr.qrscan.entities.Shop;
 import com.miirrr.qrscan.services.entities.PositionService;
 import com.miirrr.qrscan.services.entities.PositionServiceImpl;
 import com.miirrr.qrscan.services.entities.ShopService;
@@ -21,6 +22,8 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimerTask;
 
@@ -72,20 +75,24 @@ public class MainGUI {
                 int selectedRow = shopTable.getSelectedRow();
                 if ((e.getKeyCode() == 10) && (selectedRow > -1)) {
                     long shopId = Long.parseLong(String.valueOf(shopTable.getValueAt(shopTable.getSelectedRow(), 0)));
-
-                    positionService.save(textField.getText(), shopId);
+                    if (textField.getText().length() > 0) {
+                        positionService.save(textField.getText(), shopId);
 
 //                    shopTable.getSelectionModel().clearSelection();
-                    showMessage(textField.getText(), shopService.findById(shopId).getName());
-                    textField.setText("");
+                        showMessage(textField.getText(), shopService.findById(shopId).getName());
+                        textField.setText("");
 //                    textField.setEnabled(false);
 
-                    shopTable.getSelectionModel().setSelectionInterval(selectedRow, selectedRow);
-                    textField.requestFocus();
+                        shopTable.getSelectionModel().setSelectionInterval(selectedRow, selectedRow);
+                        textField.requestFocus();
+
+                        shopTable.setValueAt(countPositions(shopId), selectedRow, 2);
+                    }
                 }
             }
         });
     }
+
 
     private void showMessage(String qrCode, String shop) {
         int timeout_ms = 1500;//3 * 1000 mSec
@@ -152,17 +159,27 @@ public class MainGUI {
     private void createShopTable(long id) {
         shopTableModel.setRowCount(0);
 
+        List<Shop> shops;
+
         if (id > 0) {
-            shopService.findByCityId(id).forEach(s ->
-                    shopTableModel.addRow(new Object[]{s.getId(), s.getName()}));
+            shops = shopService.findByCityId(id);
+            ;
         } else {
-            shopService.findAll().forEach(s ->
-                    shopTableModel.addRow(new Object[]{s.getId(), s.getName()}));
+            shops = shopService.findAll();
         }
+
+        shops.forEach(s ->
+                shopTableModel.addRow(new Object[]{s.getId(), s.getName(), countPositions(s.getId())}));
 
         shopTable.clearSelection();
         shopPane.getVerticalScrollBar().setValue(1);
         shopTable.repaint();
+    }
+
+    private Object countPositions(long shopId) {
+        LocalDateTime startOfToday = LocalDateTime.now().toLocalDate().atStartOfDay();
+        long count = positionService.findByDateAndShopId(startOfToday, startOfToday.plusDays(1), shopId).stream().count();
+        return count > 0 ? count : "";
     }
 
     {
