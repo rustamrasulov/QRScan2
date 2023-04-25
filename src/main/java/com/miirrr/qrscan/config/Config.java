@@ -90,6 +90,10 @@ public class Config {
         return getProperties().getProperty("outPath").replaceAll("\\\\", "\\\\\\\\");
     }
 
+    public Dimension getSize() {
+        return new Dimension(1000, 640);
+    }
+
     private Properties getProperties() {
         Properties properties = new Properties();
 

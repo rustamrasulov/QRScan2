@@ -56,7 +56,7 @@ public class ReportMenu {
 
     public ReportMenu() {
         mainFrame = new JDialog();
-        mainFrame.setMinimumSize(new Dimension(1000, 700));
+        mainFrame.setMinimumSize(config.getSize());
         mainFrame.setLocationRelativeTo(null);
         mainFrame.setIconImage(config.getLogoImage());
         mainFrame.setModal(true);
@@ -181,9 +181,9 @@ public class ReportMenu {
         createUIComponents();
         rootPanel = new JPanel();
         rootPanel.setLayout(new GridLayoutManager(3, 1, new Insets(0, 0, 0, 0), -1, -1));
-        rootPanel.setMaximumSize(new Dimension(1000, 700));
-        rootPanel.setPreferredSize(new Dimension(1000, 700));
-        rootPanel.setMinimumSize(new Dimension(1000, 700));
+        rootPanel.setMaximumSize(config.getSize());
+        rootPanel.setPreferredSize(config.getSize());
+        rootPanel.setMinimumSize(config.getSize());
 
         topPanel = new JPanel();
         topPanel.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));

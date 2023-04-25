@@ -50,7 +50,7 @@ public class MainGUI {
     public MainGUI() {
         JFrame mainFrame = new JFrame();
         mainFrame.setIconImage(config.getLogoImage());
-        mainFrame.setMinimumSize(new Dimension(1000, 700));
+        mainFrame.setMinimumSize(config.getSize());
         mainFrame.setLocationRelativeTo(null);
         qrcodeField.requestFocus();
 
@@ -199,9 +199,9 @@ public class MainGUI {
     private void $$$setupUI$$$() {
         rootPanel = new JPanel();
         rootPanel.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
-        rootPanel.setMaximumSize(new Dimension(1000, 700));
-        rootPanel.setMinimumSize(new Dimension(1000, 700));
-        rootPanel.setPreferredSize(new Dimension(1000, 700));
+        rootPanel.setMaximumSize(config.getSize());
+        rootPanel.setMinimumSize(config.getSize());
+        rootPanel.setPreferredSize(config.getSize());
 
         final JPanel topPanel = new JPanel();
         topPanel.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
