@@ -36,11 +36,13 @@ public class ShopTable extends JTable {
         INSTANCE.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         INSTANCE.setRowHeight(60);
-        INSTANCE.setFont(new Font("", Font.BOLD, 32));
+        INSTANCE.setFont(new Font("", Font.BOLD, 28));
         INSTANCE.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         INSTANCE.getColumnModel().getColumn(0).setMinWidth(0);
         INSTANCE.getColumnModel().getColumn(0).setMaxWidth(0);
+        INSTANCE.getColumnModel().getColumn(2).setMinWidth(60);
+        INSTANCE.getColumnModel().getColumn(2).setMaxWidth(60);
 
         JTableHeader header = INSTANCE.getTableHeader();
         header.setPreferredSize(new Dimension(-1, 30));

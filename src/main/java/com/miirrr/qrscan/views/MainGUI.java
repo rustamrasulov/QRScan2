@@ -88,7 +88,7 @@ public class MainGUI {
     }
 
     private void showMessage(String qrCode, String shop) {
-        int timeout_ms = 3 * 1000;//3 * 1000 mSec
+        int timeout_ms = 1500;//3 * 1000 mSec
         String stringStart = "<HTML><h1>";
         String stringEnd = "</h1></HTML>";
         String message = stringStart + shop + "<br/>" + qrCode + stringEnd;
@@ -194,9 +194,9 @@ public class MainGUI {
         cityPane.setAlignmentY(0.5f);
         cityPane.setAutoscrolls(false);
         cityPane.setFocusable(false);
-        Font cityPaneFont = this.$$$getFont$$$(null, -1, 36, cityPane.getFont());
+        Font cityPaneFont = this.$$$getFont$$$(null, -1, 24, cityPane.getFont());
         if (cityPaneFont != null) cityPane.setFont(cityPaneFont);
-        topPanel.add(cityPane, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, new Dimension(260, -1), new Dimension(260, -1), new Dimension(260, -1), 0, false));
+        topPanel.add(cityPane, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_VERTICAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, new Dimension(230, -1), new Dimension(230, -1), new Dimension(230, -1), 0, false));
         cityTable = CityTable.getInstance();
         cityPane.setViewportView(cityTable);
         shopPane = new JScrollPane();
@@ -216,9 +216,9 @@ public class MainGUI {
             }
         });
 
-        Font shopPaneFont = this.$$$getFont$$$(null, -1, 36, shopPane.getFont());
+        Font shopPaneFont = this.$$$getFont$$$(null, -1, 24, shopPane.getFont());
         if (shopPaneFont != null) shopPane.setFont(shopPaneFont);
-        topPanel.add(shopPane, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(740, -1), new Dimension(740, -1), 0, false));
+        topPanel.add(shopPane, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, new Dimension(770, -1), new Dimension(770, -1), 0, false));
         shopTable = ShopTable.getInstance();
         shopPane.setViewportView(shopTable);
 

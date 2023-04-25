@@ -3,7 +3,7 @@ package com.miirrr.qrscan.views.tables;
 import javax.swing.table.DefaultTableModel;
 
 public class ShopTableModel extends DefaultTableModel {
-    private static final String[] storeTableColumns = {"ID", "Название"};
+    private static final String[] storeTableColumns = {"ID", "Название", "QR"};
 
     private static DefaultTableModel INSTANCE;
 

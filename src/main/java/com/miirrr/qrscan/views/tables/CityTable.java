@@ -41,7 +41,7 @@ public class CityTable extends JTable {
         INSTANCE.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         INSTANCE.setRowHeight(60);
-        INSTANCE.setFont(new Font("", Font.BOLD, 32));
+        INSTANCE.setFont(new Font("", Font.BOLD, 28));
         INSTANCE.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 
         INSTANCE.getColumnModel().getColumn(0).setMinWidth(0);
