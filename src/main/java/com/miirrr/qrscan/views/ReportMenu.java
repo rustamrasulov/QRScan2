@@ -76,20 +76,35 @@ public class ReportMenu {
 
     }
 
+//    private void setIpBox() {
+//        defaultComboBoxIpModel.addElement("ВСЕ");
+//        List<String> toSort = new ArrayList<>();
+//        Set<String> uniqueValues = new HashSet<>();
+//        for (Shop s : shopService.findAll()) {
+//            String ipName = s.getIpName() + " (" + s.getInn() + ")";
+//            if (uniqueValues.add(ipName)) {
+//                toSort.add(ipName);
+//            }
+//        }
+//        toSort.sort(null);
+//        for (String ipName : toSort) {
+//            defaultComboBoxIpModel.addElement(ipName);
+//        }
+//    }
 
     private void setIpBox() {
         defaultComboBoxIpModel.addElement("ВСЕ");
         List<String> toSort = new ArrayList<>();
         Set<String> uniqueValues = new HashSet<>();
         for (Shop s : shopService.findAll()) {
-            String ipName = s.getIpName() + " (" + s.getInn() + ")";
-            if (uniqueValues.add(ipName)) {
-                toSort.add(ipName);
+            String shopName = s.getName();
+            if (uniqueValues.add(shopName)) {
+                toSort.add(shopName);
             }
         }
         toSort.sort(null);
-        for (String ipName : toSort) {
-            defaultComboBoxIpModel.addElement(ipName);
+        for (String shopName : toSort) {
+            defaultComboBoxIpModel.addElement(shopName);
         }
     }
 
@@ -109,14 +124,15 @@ public class ReportMenu {
             if ((Objects.requireNonNull(ipBox.getSelectedItem())).toString().equals("ВСЕ")) {
                 positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo);
             } else {
+//                positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo, getIpBoxValue());
                 positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo, getIpBoxValue());
             }
         });
     }
 
-    private String getIpBoxValue() {
-        String[] inn = ipBox.getSelectedItem().toString().split("[()]");
-        return inn[1];
+    private long getIpBoxValue() {
+
+        return shopService.findByName(String.valueOf(ipBox.getSelectedItem())).getId();
 
 //        return Objects.requireNonNull(shopService.findAll().stream()
 //                .filter(s -> s.getIpName().equals(Objects.requireNonNull(ipBox.getSelectedItem()).toString()))

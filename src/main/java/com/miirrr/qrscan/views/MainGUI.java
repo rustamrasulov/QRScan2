@@ -76,17 +76,18 @@ public class MainGUI {
                 if ((e.getKeyCode() == 10) && (selectedRow > -1)) {
                     long shopId = Long.parseLong(String.valueOf(shopTable.getValueAt(shopTable.getSelectedRow(), 0)));
                     if (textField.getText().length() > 0) {
-                        positionService.save(textField.getText(), shopId);
+                        String qrStr = textField.getText().contains("93") ? String.valueOf(textField.getText().subSequence(0, textField.getText().lastIndexOf("93"))) : textField.getText();
+                        positionService.save(qrStr, shopId);
 
 //                    shopTable.getSelectionModel().clearSelection();
-                        showMessage(textField.getText(), shopService.findById(shopId).getName());
+                        showMessage(qrStr, shopService.findById(shopId).getName());
                         textField.setText("");
 //                    textField.setEnabled(false);
 
                         shopTable.getSelectionModel().setSelectionInterval(selectedRow, selectedRow);
                         textField.requestFocus();
-
-                        shopTable.setValueAt(countPositions(shopId), selectedRow, 2);
+                        createShopTable(Long.parseLong(cityTable.getValueAt(cityTable.getSelectedRow(), 0).toString()));
+//                        shopTable.setValueAt(countPositions(shopId), selectedRow, 2);
                     }
                 }
             }

@@ -12,5 +12,6 @@ import java.util.Map;
 public class ExportClass {
     private String inn;
     private String ipName;
+    private String name;
     private Map<Long, String> positionNames;
 }
