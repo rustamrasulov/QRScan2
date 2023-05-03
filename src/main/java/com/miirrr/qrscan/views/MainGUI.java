@@ -83,10 +83,10 @@ public class MainGUI {
                         showMessage(qrStr, shopService.findById(shopId).getName());
                         textField.setText("");
 //                    textField.setEnabled(false);
+                        createShopTable(Long.parseLong(cityTable.getValueAt(cityTable.getSelectedRow(), 0).toString()));
 
                         shopTable.getSelectionModel().setSelectionInterval(selectedRow, selectedRow);
                         textField.requestFocus();
-                        createShopTable(Long.parseLong(cityTable.getValueAt(cityTable.getSelectedRow(), 0).toString()));
 //                        shopTable.setValueAt(countPositions(shopId), selectedRow, 2);
                     }
                 }
