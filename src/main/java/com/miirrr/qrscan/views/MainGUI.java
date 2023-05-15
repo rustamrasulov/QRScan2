@@ -73,6 +73,7 @@ public class MainGUI {
             @Override
             public void keyPressed(KeyEvent e) {
                 int selectedRow = shopTable.getSelectedRow();
+                Point positionPoint = shopPane.getViewport().getViewPosition();
                 if ((e.getKeyCode() == 10) && (selectedRow > -1)) {
                     long shopId = Long.parseLong(String.valueOf(shopTable.getValueAt(shopTable.getSelectedRow(), 0)));
                     if (textField.getText().length() > 0) {
@@ -86,6 +87,7 @@ public class MainGUI {
                         createShopTable(Long.parseLong(cityTable.getValueAt(cityTable.getSelectedRow(), 0).toString()));
 
                         shopTable.getSelectionModel().setSelectionInterval(selectedRow, selectedRow);
+                        shopPane.getViewport().setViewPosition(positionPoint);
                         textField.requestFocus();
 //                        shopTable.setValueAt(countPositions(shopId), selectedRow, 2);
                     }
