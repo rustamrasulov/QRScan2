@@ -135,7 +135,8 @@ public class MainGUI {
             final java.util.Timer timer = new java.util.Timer("doubleClickTimer", false);
 
             @Override
-            public void mouseClicked(MouseEvent e) {
+            public void mousePressed(MouseEvent e) {
+//            public void mouseClicked(MouseEvent e) {
                 eventCnt = e.getClickCount();
                 if (e.getClickCount() == 1) {
                     timer.schedule(new TimerTask() {
