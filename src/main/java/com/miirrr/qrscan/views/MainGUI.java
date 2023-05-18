@@ -18,11 +18,9 @@ import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.StyleContext;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.TimerTask;
@@ -143,10 +141,7 @@ public class MainGUI {
                         @Override
                         public void run() {
                             if (eventCnt > 1) {
-                                new PositionMenu(
-                                        null,
-                                        null,
-                                        Long.parseLong(String.valueOf(table.getValueAt(table.getSelectedRow(), 0))));
+                                positionMenuShow(table);
                             }
                             eventCnt = 0;
                         }
@@ -154,6 +149,19 @@ public class MainGUI {
                 }
             }
         });
+    }
+
+    private void positionMenuShow(JTable table) {
+        int selectedRow = shopTable.getSelectedRow();
+        Point positionPoint = shopPane.getViewport().getViewPosition();
+        new PositionMenu(
+                LocalDateTime.now().toLocalDate().atStartOfDay(),
+                LocalDateTime.now().toLocalDate().atStartOfDay().plusDays(1),
+                Long.parseLong(String.valueOf(table.getValueAt(table.getSelectedRow(), 0))));
+
+        createShopTable(Long.parseLong(cityTable.getValueAt(cityTable.getSelectedRow(), 0).toString()));
+        shopTable.getSelectionModel().setSelectionInterval(selectedRow, selectedRow);
+        shopPane.getViewport().setViewPosition(positionPoint);
     }
 
     private void actionExportButton(JButton button) {
@@ -167,7 +175,6 @@ public class MainGUI {
 
         if (id > 0) {
             shops = shopService.findByCityId(id);
-            ;
         } else {
             shops = shopService.findAll();
         }

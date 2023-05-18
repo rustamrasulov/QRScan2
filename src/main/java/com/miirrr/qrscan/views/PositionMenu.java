@@ -14,7 +14,6 @@ import javax.swing.text.StyleContext;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
@@ -24,7 +23,7 @@ import java.util.TimerTask;
 import static javax.swing.GroupLayout.Alignment.*;
 import static javax.swing.GroupLayout.Alignment.BASELINE;
 
-public class PositionMenu extends JFrame{
+public class PositionMenu extends JFrame {
     private JPanel rootPanel;
     private JButton closeButton;
 
@@ -35,6 +34,8 @@ public class PositionMenu extends JFrame{
     private final PositionService positionService = new PositionServiceImpl();
 
     public PositionMenu(LocalDateTime dateFrom, LocalDateTime dateTo, Long shopId) {
+
+
         JDialog mainFrame = new JDialog();
         mainFrame.setMinimumSize(config.getSize());
         mainFrame.setLocationRelativeTo(null);
@@ -43,27 +44,28 @@ public class PositionMenu extends JFrame{
         mainFrame.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
         $$$setupUI$$$(dateFrom, dateTo, shopId);
 
-        positionTable.addMouseListener(new MouseAdapter() {
-            private int eventCnt = 0;
-            final java.util.Timer timer = new java.util.Timer("doubleClickTimer2", false);
+        if (positionTable.getMouseListeners().length < 3) {
+            positionTable.addMouseListener(new MouseAdapter() {
+                private int eventCnt = 0;
+                final java.util.Timer timer = new java.util.Timer("doubleClick", false);
 
-            @Override
-            public void mousePressed(MouseEvent e) {
-                eventCnt = e.getClickCount();
-                if (e.getClickCount() == 1) {
-                    timer.schedule(new TimerTask() {
-                        @Override
-                        public void run() {
-                            if (eventCnt > 1) {
-                                confirmationDialog(dateFrom, dateTo, shopId);
+                @Override
+                public void mousePressed(MouseEvent e) {
+                    eventCnt = e.getClickCount();
+                    if (e.getClickCount() == 1) {
+                        timer.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                if (eventCnt > 1) {
+                                    confirmationDialog(dateFrom, dateTo, shopId);
+                                }
+                                eventCnt = 0;
                             }
-                            eventCnt = 0;
-                        }
-                    }, 400);
+                        }, 400);
+                    }
                 }
-            }
-        });
-
+            });
+        }
         closeButton.addActionListener(e -> mainFrame.dispose());
         mainFrame.setResizable(false);
         mainFrame.add(rootPanel);
@@ -78,10 +80,14 @@ public class PositionMenu extends JFrame{
         // https://javaswing.wordpress.com/2010/04/05/jframe_close_confirm/
         // https://stackoverflow.com/questions/32051657/how-to-perform-action-after-jframe-is-closed
         // https://java-online.ru/swing-jtable.xhtml
+        String stringStart = "<HTML><h1>";
+        String stringEnd = "</h1></HTML>";
+        String message = stringStart + "Подвердите удаление" + "<br/>" + positionTable.getValueAt(positionTable.getSelectedRow(), 1) + stringEnd;
 
         JDialog jDialog = new JDialog(this, "Подверждение", true);
         jDialog.setIconImage(config.getLogoImage());
         jDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+        jDialog.setModal(true);
         jDialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
         jDialog.setSize(360, 200);
@@ -89,10 +95,6 @@ public class PositionMenu extends JFrame{
         jDialog.setLocationRelativeTo(null);
         jDialog.setLayout(null);
         jDialog.setResizable(false);
-
-        String stringStart = "<HTML><h1>";
-        String stringEnd = "</h1></HTML>";
-        String message = stringStart + "Подвердите удаление" + "<br/>" + positionTable.getValueAt(positionTable.getSelectedRow(), 1) + stringEnd;
 
         JLabel jLabel = new JLabel(message);
         jLabel.setFont(this.$$$getFont$$$(null, Font.PLAIN, 36, jLabel.getFont()));
@@ -106,22 +108,22 @@ public class PositionMenu extends JFrame{
 
         List<JButton> buttons = Arrays.asList(confirmButton, cancelButton);
 
-        for(JButton button:buttons) {
-            button.setMinimumSize(new Dimension(140, 30));
-            button.setMaximumSize(new Dimension(140, 30));
-            button.setPreferredSize(new Dimension(140, 30));
-            button.setSize(new Dimension(140, 30));
+        for (JButton button : buttons) {
+            button.setMinimumSize(new Dimension(140, 50));
+            button.setMaximumSize(new Dimension(140, 50));
+            button.setPreferredSize(new Dimension(140, 50));
+            button.setSize(new Dimension(140, 50));
             button.setFocusable(false);
-            button.setFont(this.$$$getFont$$$(null, Font.BOLD, 24, button.getFont()));
+            button.setFont(this.$$$getFont$$$(null, Font.BOLD, 20, button.getFont()));
         }
 
         confirmButton.addActionListener(e -> {
             positionService.deleteById(Long.parseLong(String.valueOf(positionTable.getValueAt(positionTable.getSelectedRow(), 0))));
             positionTable = PositionTable.getInstance(dateFrom, dateTo, shopId);
-            dispose();
+            this.dispose();
         });
 
-        cancelButton.addActionListener(e -> dispose());
+        cancelButton.addActionListener(e -> this.dispose());
 
         GroupLayout layout = new GroupLayout(jDialog.getContentPane());
         jDialog.getContentPane().setLayout(layout);
@@ -150,6 +152,7 @@ public class PositionMenu extends JFrame{
         jDialog.pack();
         jDialog.setVisible(true);
     }
+
 
     /**
      * Method generated by IntelliJ IDEA GUI Designer
