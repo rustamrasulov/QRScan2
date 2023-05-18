@@ -3,6 +3,8 @@ package com.miirrr.qrscan.views;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.miirrr.qrscan.config.Config;
+import com.miirrr.qrscan.services.entities.PositionService;
+import com.miirrr.qrscan.services.entities.PositionServiceImpl;
 import com.miirrr.qrscan.views.tables.PositionTable;
 
 import javax.swing.*;
@@ -10,14 +12,27 @@ import javax.swing.plaf.FontUIResource;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.text.StyleContext;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
+import java.util.TimerTask;
 
-public class PositionMenu {
+import static javax.swing.GroupLayout.Alignment.*;
+import static javax.swing.GroupLayout.Alignment.BASELINE;
+
+public class PositionMenu extends JFrame{
     private JPanel rootPanel;
     private JButton closeButton;
 
+    private JTable positionTable;
+
     private static final Config config = Config.getConfig();
+
+    private final PositionService positionService = new PositionServiceImpl();
 
     public PositionMenu(LocalDateTime dateFrom, LocalDateTime dateTo, Long shopId) {
         JDialog mainFrame = new JDialog();
@@ -27,6 +42,28 @@ public class PositionMenu {
         mainFrame.setModal(true);
         mainFrame.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
         $$$setupUI$$$(dateFrom, dateTo, shopId);
+
+        positionTable.addMouseListener(new MouseAdapter() {
+            private int eventCnt = 0;
+            final java.util.Timer timer = new java.util.Timer("doubleClickTimer2", false);
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                eventCnt = e.getClickCount();
+                if (e.getClickCount() == 1) {
+                    timer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            if (eventCnt > 1) {
+                                confirmationDialog(dateFrom, dateTo, shopId);
+                            }
+                            eventCnt = 0;
+                        }
+                    }, 400);
+                }
+            }
+        });
+
         closeButton.addActionListener(e -> mainFrame.dispose());
         mainFrame.setResizable(false);
         mainFrame.add(rootPanel);
@@ -34,6 +71,84 @@ public class PositionMenu {
 
         mainFrame.pack();
         mainFrame.setVisible(true);
+    }
+
+    private void confirmationDialog(LocalDateTime dateFrom, LocalDateTime dateTo, Long shopId) {
+
+        // https://javaswing.wordpress.com/2010/04/05/jframe_close_confirm/
+        // https://stackoverflow.com/questions/32051657/how-to-perform-action-after-jframe-is-closed
+        // https://java-online.ru/swing-jtable.xhtml
+
+        JDialog jDialog = new JDialog(this, "Подверждение", true);
+        jDialog.setIconImage(config.getLogoImage());
+        jDialog.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+        jDialog.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
+
+        jDialog.setSize(360, 200);
+        jDialog.setBounds(360, 200, 360, 200);
+        jDialog.setLocationRelativeTo(null);
+        jDialog.setLayout(null);
+        jDialog.setResizable(false);
+
+        String stringStart = "<HTML><h1>";
+        String stringEnd = "</h1></HTML>";
+        String message = stringStart + "Подвердите удаление" + "<br/>" + positionTable.getValueAt(positionTable.getSelectedRow(), 1) + stringEnd;
+
+        JLabel jLabel = new JLabel(message);
+        jLabel.setFont(this.$$$getFont$$$(null, Font.PLAIN, 36, jLabel.getFont()));
+        jLabel.setOpaque(true);
+        jLabel.setMinimumSize(new Dimension(300, 50));
+
+        jLabel.setHorizontalAlignment(JTextField.CENTER);
+
+        JButton confirmButton = new JButton("УДАЛИТЬ");
+        JButton cancelButton = new JButton("ОТМЕНА");
+
+        List<JButton> buttons = Arrays.asList(confirmButton, cancelButton);
+
+        for(JButton button:buttons) {
+            button.setMinimumSize(new Dimension(140, 30));
+            button.setMaximumSize(new Dimension(140, 30));
+            button.setPreferredSize(new Dimension(140, 30));
+            button.setSize(new Dimension(140, 30));
+            button.setFocusable(false);
+            button.setFont(this.$$$getFont$$$(null, Font.BOLD, 24, button.getFont()));
+        }
+
+        confirmButton.addActionListener(e -> {
+            positionService.deleteById(Long.parseLong(String.valueOf(positionTable.getValueAt(positionTable.getSelectedRow(), 0))));
+            positionTable = PositionTable.getInstance(dateFrom, dateTo, shopId);
+            dispose();
+        });
+
+        cancelButton.addActionListener(e -> dispose());
+
+        GroupLayout layout = new GroupLayout(jDialog.getContentPane());
+        jDialog.getContentPane().setLayout(layout);
+        layout.setAutoCreateGaps(true);
+        layout.setAutoCreateContainerGaps(true);
+
+        layout.setHorizontalGroup(layout.createParallelGroup(CENTER)
+                .addComponent(jLabel)
+                .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(CENTER)
+                                .addComponent(confirmButton))
+                        .addGroup(layout.createParallelGroup(CENTER)
+                                .addComponent(cancelButton))));
+
+        layout.linkSize(SwingConstants.VERTICAL, confirmButton, cancelButton);
+
+        layout.setVerticalGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(BASELINE)
+                        .addComponent(jLabel))
+                .addGroup(layout.createParallelGroup(LEADING)
+                        .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(BASELINE)
+                                        .addComponent(confirmButton)
+                                        .addComponent(cancelButton)))));
+
+        jDialog.pack();
+        jDialog.setVisible(true);
     }
 
     /**
@@ -73,7 +188,7 @@ public class PositionMenu {
         if (positionTablePaneFont != null) positionTablePane.setFont(positionTablePaneFont);
         rootPanel.add(positionTablePane, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
 
-        JTable positionTable = PositionTable.getInstance(dateFrom, dateTo, shopId);
+        positionTable = PositionTable.getInstance(dateFrom, dateTo, shopId);
         positionTablePane.setViewportView(positionTable);
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
