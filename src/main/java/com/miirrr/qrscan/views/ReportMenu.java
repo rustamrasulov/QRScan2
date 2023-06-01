@@ -125,18 +125,22 @@ public class ReportMenu {
                 positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo);
             } else {
 //                positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo, getIpBoxValue());
-                positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo, getIpBoxValue());
+                positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo, getIpBoxLongValue());
             }
         });
     }
 
-    private long getIpBoxValue() {
+    private String getIpBoxValue() {
 
+//        return shopService.findByName(String.valueOf(ipBox.getSelectedItem())).getId();
+
+        return Objects.requireNonNull(shopService.findAll().stream()
+                .filter(s -> s.getIpName().equals(Objects.requireNonNull(ipBox.getSelectedItem()).toString()))
+                .findFirst().orElse(null)).getInn();
+    }
+
+    private long getIpBoxLongValue() {
         return shopService.findByName(String.valueOf(ipBox.getSelectedItem())).getId();
-
-//        return Objects.requireNonNull(shopService.findAll().stream()
-//                .filter(s -> s.getIpName().equals(Objects.requireNonNull(ipBox.getSelectedItem()).toString()))
-//                .findFirst().orElse(null)).getInn();
     }
 
     private void setSaveButtonAction(JButton button) {
@@ -174,7 +178,7 @@ public class ReportMenu {
                     reportExport.export(dateTimeFrom, dateTimeTo, null, outPath, false);
                     positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo);
                 } else {
-                    reportExport.export(dateTimeFrom, dateTimeTo, getIpBoxValue(), outPath, false);
+                    reportExport.exportOneShop(dateTimeFrom, dateTimeTo, getIpBoxLongValue(), outPath);
                     ipBox.setSelectedIndex(0);
                     positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo);
                 }

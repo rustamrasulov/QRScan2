@@ -75,7 +75,34 @@ public class ReportExport implements Job {
         }
     }
 
-    public void export(LocalDateTime dateFrom, LocalDateTime dateTo, Long shopId, String path, boolean scheduled) {
+    public void exportOneShop(LocalDateTime dateFrom, LocalDateTime dateTo, Long shopId, String path) {
+        if (path == null) {
+            outPath = config.getOutPath();
+        } else {
+            outPath = path;
+        }
+
+        Shop s = shopService.findById(shopId);
+
+        Map<String, ExportClass> positionsToExport = new HashMap<>();
+
+        Map<Long, String> positionNames = positionService
+                .findByDateAndShopId(dateFrom, dateTo, s.getId())
+                .stream().collect(Collectors.toMap(BaseEntity::getId, Position::getName));
+        if (!positionNames.isEmpty()) {
+            ExportClass exportClass = new ExportClass();
+            exportClass.setInn(s.getInn());
+            exportClass.setIpName(s.getIpName());
+            exportClass.setName(s.getName());
+            exportClass.setPositionNames(positionNames);
+            positionsToExport.put(s.getName(), exportClass);
+        }
+
+        saveExcelByShop(positionsToExport, outPath + "/" + removePunctuations(s.getName()) + "_(" + s.getInn()
+                + ")_" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".xls");
+    }
+
+    public void export(LocalDateTime dateFrom, LocalDateTime dateTo, String ipInn, String path, boolean scheduled) {
         if (path == null) {
             outPath = config.getOutPath();
         } else {
@@ -84,104 +111,49 @@ public class ReportExport implements Job {
 
         Map<String, ExportClass> positionsToExport = new HashMap<>();
 
-        if (shopId == null) {
+        if (ipInn == null) {
             for (Shop s : shopService.findAll()) {
                 if (!positionsToExport.containsKey(s.getInn())) {
                     Map<Long, String> positionNames;
                     if (scheduled) {
                         positionNames = positionService
-                                .findByDateAndShopId(dateFrom, dateTo, s.getId())
+                                .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
                                 .stream().filter(p -> !p.isScheduled()).collect(Collectors.toMap(BaseEntity::getId, Position::getName));
                     } else {
                         positionNames = positionService
-                                .findByDateAndShopId(dateFrom, dateTo, s.getId())
+                                .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
                                 .stream().collect(Collectors.toMap(BaseEntity::getId, Position::getName));
                     }
                     if (!positionNames.isEmpty()) {
                         ExportClass exportClass = new ExportClass();
                         exportClass.setInn(s.getInn());
                         exportClass.setIpName(s.getIpName());
-                        exportClass.setName(s.getName());
                         exportClass.setPositionNames(positionNames);
                         positionsToExport.put(s.getInn(), exportClass);
                     }
                 }
             }
         } else {
-            for (Shop s : shopService.findAll()) {
+            for (Shop s : shopService.findAll().stream().filter(s -> s.getInn().equals(ipInn)).collect(Collectors.toList())) {
                 Map<Long, String> positionNames = positionService
-                        .findByDateAndShopId(dateFrom, dateTo, s.getId())
+                        .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
                         .stream().collect(Collectors.toMap(BaseEntity::getId, Position::getName));
                 if (!positionNames.isEmpty()) {
                     ExportClass exportClass = new ExportClass();
                     exportClass.setInn(s.getInn());
                     exportClass.setIpName(s.getIpName());
-                    exportClass.setName(s.getName());
                     exportClass.setPositionNames(positionNames);
-                    positionsToExport.put(s.getName(), exportClass);
+                    positionsToExport.put(s.getInn(), exportClass);
                 }
             }
         }
 
         if (!positionsToExport.isEmpty()) {
-            if (saveExcelByShop(positionsToExport, null) && scheduled) {
+            if (saveExcelByINN(positionsToExport, null) && scheduled) {
                 updatePositions(positionsToExport);
             }
         }
     }
-
-//    public void export(LocalDateTime dateFrom, LocalDateTime dateTo, String ipInn, String path, boolean scheduled) {
-//        if (path == null) {
-//            outPath = config.getOutPath();
-//        } else {
-//            outPath = path;
-//        }
-//
-//        Map<String, ExportClass> positionsToExport = new HashMap<>();
-//
-//        if (ipInn == null) {
-//            for (Shop s : shopService.findAll()) {
-//                if (!positionsToExport.containsKey(s.getInn())) {
-//                    Map<Long, String> positionNames;
-//                    if (scheduled) {
-//                        positionNames = positionService
-//                                .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
-//                                .stream().filter(p -> !p.isScheduled()).collect(Collectors.toMap(BaseEntity::getId, Position::getName));
-//                    } else {
-//                        positionNames = positionService
-//                                .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
-//                                .stream().collect(Collectors.toMap(BaseEntity::getId, Position::getName));
-//                    }
-//                    if (!positionNames.isEmpty()) {
-//                        ExportClass exportClass = new ExportClass();
-//                        exportClass.setInn(s.getInn());
-//                        exportClass.setIpName(s.getIpName());
-//                        exportClass.setPositionNames(positionNames);
-//                        positionsToExport.put(s.getInn(), exportClass);
-//                    }
-//                }
-//            }
-//        } else {
-//            for (Shop s : shopService.findAll().stream().filter(s -> s.getInn().equals(ipInn)).collect(Collectors.toList())) {
-//                Map<Long, String> positionNames = positionService
-//                        .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
-//                        .stream().collect(Collectors.toMap(BaseEntity::getId, Position::getName));
-//                if (!positionNames.isEmpty()) {
-//                    ExportClass exportClass = new ExportClass();
-//                    exportClass.setInn(s.getInn());
-//                    exportClass.setIpName(s.getIpName());
-//                    exportClass.setPositionNames(positionNames);
-//                    positionsToExport.put(s.getInn(), exportClass);
-//                }
-//            }
-//        }
-//
-//        if (!positionsToExport.isEmpty()) {
-//            if (saveExcelByINN(positionsToExport, null) && scheduled) {
-//                updatePositions(positionsToExport);
-//            }
-//        }
-//    }
 
     private void updatePositions(Map<String, ExportClass> exportClassMap) {
         exportClassMap.values().forEach(e -> e.getPositionNames()
