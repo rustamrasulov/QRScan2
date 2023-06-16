@@ -54,7 +54,7 @@ public class ReportExport implements Job {
         LocalDateTime dateFrom = LocalDateTime.now().toLocalDate().atStartOfDay().minusWeeks(1);
         LocalDateTime dateTo = LocalDateTime.now().toLocalDate().atStartOfDay().plusDays(1);
 
-        Map<String, ExportClass> positionsToExport = new HashMap<>();
+        Map<Long, ExportClass> positionsToExport = new HashMap<>();
         Map<Long, String> positionNames = positionService.findByDateAndShopId(dateFrom, dateTo, shop.getId())
                 .stream().collect(Collectors.toMap(BaseEntity::getId, Position::getName));
         if (!positionNames.isEmpty()) {
@@ -63,7 +63,7 @@ public class ReportExport implements Job {
             exportClass.setIpName(shop.getIpName());
             exportClass.setName(shop.getName());
             exportClass.setPositionNames(positionNames);
-            positionsToExport.put(shop.getInn(), exportClass);
+            positionsToExport.put(shop.getId(), exportClass);
 
             String fileName = config.getOutPath() + "/" + shop.getShopCorpId() + "_"
                     + shop.getIpName() + "_" + shop.getInn() + "_to_" + newInn + "_"
@@ -109,41 +109,47 @@ public class ReportExport implements Job {
             outPath = path;
         }
 
-        Map<String, ExportClass> positionsToExport = new HashMap<>();
+        Map<Long, ExportClass> positionsToExport = new HashMap<>();
 
         if (ipInn == null) {
             for (Shop s : shopService.findAll()) {
-                if (!positionsToExport.containsKey(s.getInn())) {
+//                if (!positionsToExport.containsKey(s.getInn())) {
+                if (!positionsToExport.containsKey(s.getId())) {
                     Map<Long, String> positionNames;
                     if (scheduled) {
                         positionNames = positionService
-                                .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
+//                                .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
+                                .findByDateAndShopId(dateFrom, dateTo, s.getId())
                                 .stream().filter(p -> !p.isScheduled()).collect(Collectors.toMap(BaseEntity::getId, Position::getName));
                     } else {
                         positionNames = positionService
-                                .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
+//                                .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
+                                .findByDateAndShopId(dateFrom, dateTo, s.getId())
                                 .stream().collect(Collectors.toMap(BaseEntity::getId, Position::getName));
                     }
                     if (!positionNames.isEmpty()) {
                         ExportClass exportClass = new ExportClass();
                         exportClass.setInn(s.getInn());
                         exportClass.setIpName(s.getIpName());
+                        exportClass.setName(s.getName());
                         exportClass.setPositionNames(positionNames);
-                        positionsToExport.put(s.getInn(), exportClass);
+                        positionsToExport.put(s.getId(), exportClass);
                     }
                 }
             }
         } else {
             for (Shop s : shopService.findAll().stream().filter(s -> s.getInn().equals(ipInn)).collect(Collectors.toList())) {
                 Map<Long, String> positionNames = positionService
-                        .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
+//                                .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
+                        .findByDateAndShopId(dateFrom, dateTo, s.getId())
                         .stream().collect(Collectors.toMap(BaseEntity::getId, Position::getName));
                 if (!positionNames.isEmpty()) {
                     ExportClass exportClass = new ExportClass();
                     exportClass.setInn(s.getInn());
                     exportClass.setIpName(s.getIpName());
+                    exportClass.setName(s.getName());
                     exportClass.setPositionNames(positionNames);
-                    positionsToExport.put(s.getInn(), exportClass);
+                    positionsToExport.put(s.getId(), exportClass);
                 }
             }
         }
@@ -155,7 +161,7 @@ public class ReportExport implements Job {
         }
     }
 
-    private void updatePositions(Map<String, ExportClass> exportClassMap) {
+    private void updatePositions(Map<Long, ExportClass> exportClassMap) {
         exportClassMap.values().forEach(e -> e.getPositionNames()
                 .forEach((id, name) -> {
                             Position position = positionService.findById(id);
@@ -197,17 +203,16 @@ public class ReportExport implements Job {
         });
 
         return saved.get();
-
     }
 
-    private boolean saveExcelByINN(Map<String, ExportClass> exportClassMap, String fileName) {
+    private boolean saveExcelByINN(Map<Long, ExportClass> exportClassMap, String fileName) {
         AtomicBoolean saved = new AtomicBoolean(false);
-        exportClassMap.forEach((inn, shop) -> {
+        exportClassMap.forEach((id, shop) -> {
                     final short[] rowCount = {0};
 
                     String _fileName = fileName;
                     if (fileName == null) {
-                        _fileName = outPath + "/" + shop.getIpName() + "_" + shop.getInn() + "_"
+                        _fileName = outPath + "/" + shop.getIpName() + "_" + shop.getInn() + "_" + shop.getName() + "_"
                                 + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".xls";
                     }
 
