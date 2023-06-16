@@ -127,14 +127,7 @@ public class ReportExport implements Job {
                                 .findByDateAndShopId(dateFrom, dateTo, s.getId())
                                 .stream().collect(Collectors.toMap(BaseEntity::getId, Position::getName));
                     }
-                    if (!positionNames.isEmpty()) {
-                        ExportClass exportClass = new ExportClass();
-                        exportClass.setInn(s.getInn());
-                        exportClass.setIpName(s.getIpName());
-                        exportClass.setName(s.getName());
-                        exportClass.setPositionNames(positionNames);
-                        positionsToExport.put(s.getId(), exportClass);
-                    }
+                    createExportObject(positionsToExport, s, positionNames);
                 }
             }
         } else {
@@ -143,14 +136,7 @@ public class ReportExport implements Job {
 //                                .findByDateAndShopINN(dateFrom, dateTo, s.getInn())
                         .findByDateAndShopId(dateFrom, dateTo, s.getId())
                         .stream().collect(Collectors.toMap(BaseEntity::getId, Position::getName));
-                if (!positionNames.isEmpty()) {
-                    ExportClass exportClass = new ExportClass();
-                    exportClass.setInn(s.getInn());
-                    exportClass.setIpName(s.getIpName());
-                    exportClass.setName(s.getName());
-                    exportClass.setPositionNames(positionNames);
-                    positionsToExport.put(s.getId(), exportClass);
-                }
+                createExportObject(positionsToExport, s, positionNames);
             }
         }
 
@@ -158,6 +144,17 @@ public class ReportExport implements Job {
             if (saveExcelByINN(positionsToExport, null) && scheduled) {
                 updatePositions(positionsToExport);
             }
+        }
+    }
+
+    private void createExportObject(Map<Long, ExportClass> positionsToExport, Shop s, Map<Long, String> positionNames) {
+        if (!positionNames.isEmpty()) {
+            ExportClass exportClass = new ExportClass();
+            exportClass.setInn(s.getInn());
+            exportClass.setIpName(s.getIpName());
+            exportClass.setName(s.getName());
+            exportClass.setPositionNames(positionNames);
+            positionsToExport.put(s.getId(), exportClass);
         }
     }
 
@@ -212,7 +209,9 @@ public class ReportExport implements Job {
 
                     String _fileName = fileName;
                     if (fileName == null) {
-                        _fileName = outPath + "/" + shop.getIpName() + "_" + shop.getInn() + "_" + shop.getName() + "_"
+                        _fileName = outPath + "/"
+                                + removePunctuations(shop.getIpName()) + "_" + shop.getInn() + "_"
+                                + removePunctuations(shop.getName()) + "_"
                                 + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")) + ".xls";
                     }
 
