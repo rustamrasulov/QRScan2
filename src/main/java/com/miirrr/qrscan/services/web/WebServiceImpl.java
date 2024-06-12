@@ -66,7 +66,7 @@ public class WebServiceImpl implements WebService{
             JOptionPane.showMessageDialog(jFrame, "Не возможно подключиться к серверу." +
                     "\nОбратитесь к администратору", "Error", JOptionPane.ERROR_MESSAGE);
             result = "ERROR";
-
+            System.exit(0);
         }
 
         assert result != null;

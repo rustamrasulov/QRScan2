@@ -94,6 +94,10 @@ public class Config {
         return new Dimension(1000, 640);
     }
 
+    public int getDataMatrixLength() {
+        return Integer.getInteger(getProperties().getProperty("dataMatrixLength"));
+    }
+
     private Properties getProperties() {
         Properties properties = new Properties();
 
