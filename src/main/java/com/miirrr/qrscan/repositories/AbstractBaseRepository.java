@@ -2,14 +2,14 @@ package com.miirrr.qrscan.repositories;
 
 import com.miirrr.qrscan.db.DBConnector;
 import com.miirrr.qrscan.entities.BaseEntity;
+import java.lang.reflect.ParameterizedType;
+import java.util.List;
+import javax.persistence.MappedSuperclass;
 import lombok.extern.log4j.Log4j2;
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.query.Query;
-
-import javax.persistence.MappedSuperclass;
-import java.lang.reflect.ParameterizedType;
-import java.util.List;
 
 @Log4j2
 @MappedSuperclass

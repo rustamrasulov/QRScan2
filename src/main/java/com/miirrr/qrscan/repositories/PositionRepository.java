@@ -12,4 +12,8 @@ public interface PositionRepository extends BaseRepository<Position>{
     List<Position> getByDateAndShopINN(LocalDateTime dateFrom, LocalDateTime dateTo, String inn);
 
     List<Position> getByDateAndShopId(LocalDateTime dateFrom, LocalDateTime dateTo, long shopId);
+
+    boolean existsByName(String name);
+
+    boolean existsByNameAndShopId(String name, Long shopId);
 }

@@ -13,19 +13,33 @@ import com.miirrr.qrscan.services.keyboardlayout.KeyboardLayoutServiceImpl;
 import com.miirrr.qrscan.views.tables.CityTable;
 import com.miirrr.qrscan.views.tables.ShopTable;
 import com.miirrr.qrscan.views.tables.ShopTableModel;
-
-import javax.swing.*;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Locale;
+import java.util.TimerTask;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JDialog;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.Timer;
+import javax.swing.WindowConstants;
 import javax.swing.plaf.FontUIResource;
 import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.StyleContext;
-import java.awt.*;
-import java.awt.event.*;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.TimerTask;
 
 
 public class MainGUI {

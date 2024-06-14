@@ -10,9 +10,8 @@ import com.miirrr.qrscan.services.entities.ShopService;
 import com.miirrr.qrscan.services.entities.ShopServiceImpl;
 import com.miirrr.qrscan.services.web.WebService;
 import com.miirrr.qrscan.services.web.WebServiceImpl;
-import lombok.extern.log4j.Log4j2;
-
 import java.io.IOException;
+import lombok.extern.log4j.Log4j2;
 
 @Log4j2
 public class ParseShopImpl implements ParseShop {
@@ -52,7 +51,9 @@ public class ParseShopImpl implements ParseShop {
                             .replace(" (СКЛАД)", "")
                             .replace("НИЖНЕВАРТОВСК", "Н-ВАРТОВСК")
                             .replace("НОВЫЙ УРЕНГОЙ", "Н. УРЕНГОЙ");
-                    if(cityName.length() == 0) cityName = "Все";
+                    if (cityName.isEmpty()) {
+                        cityName = "Все";
+                    }
 
                     City city = cityService.findByName(cityName);
                     if(city == null) {
@@ -85,11 +86,7 @@ public class ParseShopImpl implements ParseShop {
             throw new RuntimeException(e);
         }
 
-        for(City c : cityService.findAll()) {
-            if(c.getShops().isEmpty()) {
-                cityService.deleteById(c.getId());
-            }
-        }
-
+        cityService.findAll().stream().filter(city -> city.getShops().isEmpty())
+            .forEach(city -> cityService.deleteById(city.getId()));
     }
 }

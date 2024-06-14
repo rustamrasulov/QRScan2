@@ -4,7 +4,6 @@ import com.miirrr.qrscan.entities.Position;
 import com.miirrr.qrscan.entities.Shop;
 import com.miirrr.qrscan.repositories.PositionRepository;
 import com.miirrr.qrscan.repositories.PositionRepositoryImpl;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -21,13 +20,14 @@ public class PositionServiceImpl implements PositionService {
 
     @Override
     public void save(String qrCode, long shopId) {
-        Position position = positionRepository.findByName(qrCode);
-        Shop shopNew = shopService.findById(shopId);
+        if (!existsByNameAndShopId(qrCode, shopId)) {
+            Shop shopNew = shopService.findById(shopId);
 
-        if (position == null) position = new Position(qrCode, shopNew, LocalDateTime.now());
-        position.setShop(shopNew);
+            Position position = new Position(qrCode, shopNew, LocalDateTime.now());
+            position.setShop(shopNew);
 
-        save(position);
+            save(position);
+        }
     }
 
     @Override
@@ -88,5 +88,15 @@ public class PositionServiceImpl implements PositionService {
     @Override
     public void deleteById(Long id) {
         positionRepository.deleteById(id);
+    }
+
+    @Override
+    public boolean existsByName(String qrCode) {
+        return positionRepository.existsByName(qrCode);
+    }
+
+    @Override
+    public boolean existsByNameAndShopId(String name, Long shopId) {
+        return positionRepository.existsByNameAndShopId(name, shopId);
     }
 }
