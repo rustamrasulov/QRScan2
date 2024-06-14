@@ -78,7 +78,7 @@ public class MainGUI {
                 Point positionPoint = shopPane.getViewport().getViewPosition();
                 if ((e.getKeyCode() == 10) && (selectedRow > -1)) {
                     long shopId = Long.parseLong(String.valueOf(shopTable.getValueAt(shopTable.getSelectedRow(), 0)));
-                    if (textField.getText().length() > config.getDataMatrixLength() && keyboardLayoutService.isEngUs()) {
+                    if (textField.getText().length() >= config.getDataMatrixLength() && keyboardLayoutService.isEngUs()) {
                         String qrStr = textField.getText().contains("93") ? String.valueOf(textField.getText().subSequence(0, textField.getText().lastIndexOf("93"))) : textField.getText();
                         positionService.save(qrStr, shopId);
 
@@ -93,17 +93,23 @@ public class MainGUI {
                         textField.requestFocus();
 //                        shopTable.setValueAt(countPositions(shopId), selectedRow, 2);
                     } else if (!keyboardLayoutService.isEngUs()) {
-                        showErrorMessage();
+                        showErrorMessage("Переключить раскладку клавиатуры на Английскую");
+                        textField.setText("");
+                        textField.requestFocus();
+                    } else {
+                        showErrorMessage("Неправильный код");
+                        textField.setText("");
+                        textField.requestFocus();
                     }
                 }
             }
         });
     }
 
-    private void showErrorMessage() {
+    private void showErrorMessage(String text) {
         String stringStart = "<HTML><h1>";
         String stringEnd = "</h1></HTML>";
-        String message = stringStart + "Поменяйте раскладку клавиатуры!!!" + stringEnd;
+        String message = stringStart + text + stringEnd;
 
         JOptionPane pane = new JOptionPane(message, JOptionPane.ERROR_MESSAGE);
         JDialog dialog = pane.createDialog(null, "АХТУНГ!");

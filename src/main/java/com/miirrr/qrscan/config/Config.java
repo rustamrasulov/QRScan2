@@ -95,7 +95,7 @@ public class Config {
     }
 
     public int getDataMatrixLength() {
-        return Integer.getInteger(getProperties().getProperty("dataMatrixLength"));
+        return Integer.parseInt(getProperties().getProperty("dataMatrixLength"));
     }
 
     private Properties getProperties() {
