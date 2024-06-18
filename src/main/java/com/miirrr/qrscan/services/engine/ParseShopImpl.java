@@ -40,9 +40,34 @@ public class ParseShopImpl implements ParseShop {
     @Override
     public void loadStores() {
         ObjectMapper mapper = new ObjectMapper();
-
+        String jsonString = "{\n" +
+                            "  \"shopslist\": [\n" +
+                            "    {\n" +
+                            "      \"id\": \"shop_id_1\",\n" +
+                            "      \"name\": \"Shop 1\",\n" +
+                            "      \"inn\": \"1234567890\",\n" +
+                            "      \"ip\": \"192.168.1.1\",\n" +
+                            "      \"city\": \"City 1\"\n" +
+                            "    },\n" +
+                            "    {\n" +
+                            "      \"id\": \"shop_id_2\",\n" +
+                            "      \"name\": \"Shop 2\",\n" +
+                            "      \"inn\": \"0987654321\",\n" +
+                            "      \"ip\": \"192.168.1.2\",\n" +
+                            "      \"city\": \"City 2\"\n" +
+                            "    },\n" +
+                            "    {\n" +
+                            "      \"id\": \"shop_id_3\",\n" +
+                            "      \"name\": \"Shop 3\",\n" +
+                            "      \"inn\": \"1357902468\",\n" +
+                            "      \"ip\": \"192.168.1.3\",\n" +
+                            "      \"city\": \"City 1\"\n" +
+                            "    }\n" +
+                            "  ]\n" +
+                            "}";
         try {
-            JsonNode jsonNode = mapper.readTree((webService.request("getshopslist")));
+//            JsonNode jsonNode = mapper.readTree((webService.request("getshopslist")));
+            JsonNode jsonNode = mapper.readTree(jsonString);
             if (!jsonNode.toString().contains("code")) {
 
                 JsonNode jsonArray = jsonNode.get("shopslist");
