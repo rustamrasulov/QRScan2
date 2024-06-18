@@ -56,7 +56,7 @@ public class PositionRepositoryImpl extends AbstractBaseRepository<Position> imp
         try (Session session = DBConnector.getSessionFactory().openSession()) {
             Query<Boolean> query = session.createQuery(
                 "SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END FROM Position p WHERE p.name = :NAME",
-                boolean.class
+                Boolean.class
             );
             query.setParameter("NAME", name);
             return query.uniqueResult();
@@ -68,7 +68,7 @@ public class PositionRepositoryImpl extends AbstractBaseRepository<Position> imp
         try (Session session = DBConnector.getSessionFactory().openSession()) {
             Query<Boolean> query = session.createQuery(
                 "SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END FROM Position p WHERE p.name = :NAME AND p.shop.id = :SHOP_ID",
-                boolean.class
+                Boolean.class
             );
             query.setParameter("NAME", name);
             query.setParameter("SHOP_ID", shopId);

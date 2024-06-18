@@ -20,14 +20,17 @@ public class PositionServiceImpl implements PositionService {
 
     @Override
     public void save(String qrCode, long shopId) {
-        if (!existsByNameAndShopId(qrCode, shopId)) {
-            Shop shopNew = shopService.findById(shopId);
+        Shop shopNew = shopService.findById(shopId);
+        Position position;
 
-            Position position = new Position(qrCode, shopNew, LocalDateTime.now());
-            position.setShop(shopNew);
-
-            save(position);
+        if (!existsByName(qrCode)) {
+            position = new Position(qrCode, shopNew, LocalDateTime.now());
+        } else {
+            position = findByName(qrCode);
+            position.setDate(LocalDateTime.now());
         }
+        position.setShop(shopNew);
+        save(position);
     }
 
     @Override

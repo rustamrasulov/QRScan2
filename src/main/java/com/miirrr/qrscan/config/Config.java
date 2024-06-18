@@ -1,7 +1,7 @@
 package com.miirrr.qrscan.config;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.Image;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,9 +12,10 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
+import javax.swing.ImageIcon;
+import org.codehaus.plexus.util.StringUtils;
 
 public class Config {
-
 
     private static volatile Config INSTANCE;
 
@@ -24,7 +25,8 @@ public class Config {
     }
 
     public static Config getConfig() {
-        if (Files.exists(new File(Paths.get(System.getProperty("user.home")).toAbsolutePath().normalize() + "/QRScan/qrscan.cfg").toPath())) {
+        if (Files.exists(new File(
+            Paths.get(System.getProperty("user.home")).toAbsolutePath().normalize() + "/QRScan/qrscan.cfg").toPath())) {
             configPath = Paths.get(System.getProperty("user.home")).toAbsolutePath().normalize() + "/QRScan/qrscan.cfg";
         } else {
             configPath = Paths.get(".").toAbsolutePath().normalize() + "/qrscan.cfg";
@@ -58,7 +60,7 @@ public class Config {
     public String getDbPath() {
         String dbPath = getProperties().getProperty("dbPath");
 
-        if(dbPath.length() == 0) {
+        if (dbPath.length() == 0) {
             dbPath = Paths.get(System.getProperty("user.home")).toAbsolutePath().normalize() + "/QRScan/";
         } else {
             if (!dbPath.endsWith("/")) {
@@ -95,7 +97,13 @@ public class Config {
     }
 
     public int getDataMatrixLength() {
-        return Integer.parseInt(getProperties().getProperty("dataMatrixLength"));
+        int dataMatrixLength = 20;
+        String dataMatrixLengthStr = getProperties().getProperty("dataMatrixLength");
+        if (StringUtils.isNotBlank(dataMatrixLengthStr)) {
+            dataMatrixLength = Integer.parseInt(getProperties().getProperty("dataMatrixLength"));
+        }
+
+        return dataMatrixLength;
     }
 
     private Properties getProperties() {

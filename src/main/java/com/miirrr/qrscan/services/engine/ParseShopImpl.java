@@ -66,8 +66,8 @@ public class ParseShopImpl implements ParseShop {
                             "  ]\n" +
                             "}";
         try {
-//            JsonNode jsonNode = mapper.readTree((webService.request("getshopslist")));
-            JsonNode jsonNode = mapper.readTree(jsonString);
+            JsonNode jsonNode = mapper.readTree((webService.request("getshopslist")));
+//            JsonNode jsonNode = mapper.readTree(jsonString);
             if (!jsonNode.toString().contains("code")) {
 
                 JsonNode jsonArray = jsonNode.get("shopslist");
