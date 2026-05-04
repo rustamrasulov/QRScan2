@@ -22,6 +22,16 @@ public class WebServiceImpl implements WebService{
         config = Config.getConfig();
     }
 
+    /**
+     * Сбрасывает singleton экземпляр веб-клиента.
+     * Нужен интеграционным тестам при смене конфигурации или адреса mock-сервера.
+     */
+    public static void resetInstance() {
+        synchronized (WebServiceImpl.class) {
+            INSTANCE = null;
+        }
+    }
+
     @Override
     public WebServiceImpl getInstance() {
         if (INSTANCE == null) {

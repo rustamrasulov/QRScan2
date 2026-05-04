@@ -2,6 +2,8 @@ package com.miirrr.qrscan.entities;
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -44,6 +46,11 @@ public class Position extends BaseEntity{
     @Column(name = "scheduled")
     private boolean isScheduled;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "product_type")
+    @NonNull
+    private ProductType productType;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -68,6 +75,7 @@ public class Position extends BaseEntity{
                 "name='" + name + '\'' +
                 ", shop=" + shop +
                 ", date=" + date +
+                ", productType=" + productType +
                 ", id=" + id +
                 '}';
     }

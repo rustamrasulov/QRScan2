@@ -41,6 +41,17 @@ public class Config {
         return INSTANCE;
     }
 
+    /**
+     * Сбрасывает кеш singleton-конфигурации.
+     * Используется интеграционными тестами при подмене файла {@code qrscan.cfg}.
+     */
+    public static void reset() {
+        synchronized (Config.class) {
+            INSTANCE = null;
+            configPath = null;
+        }
+    }
+
     public Image getLogoImage() {
         URL logoURL = getClass().getResource("/images/logo.png");
         assert logoURL != null;

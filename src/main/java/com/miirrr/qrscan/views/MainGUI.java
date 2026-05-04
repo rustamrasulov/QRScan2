@@ -3,9 +3,11 @@ package com.miirrr.qrscan.views;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.miirrr.qrscan.config.Config;
+import com.miirrr.qrscan.entities.ProductType;
 import com.miirrr.qrscan.entities.Shop;
 import com.miirrr.qrscan.services.entities.PositionService;
 import com.miirrr.qrscan.services.entities.PositionServiceImpl;
+import com.miirrr.qrscan.services.entities.ProductTypeContext;
 import com.miirrr.qrscan.services.entities.ShopService;
 import com.miirrr.qrscan.services.entities.ShopServiceImpl;
 import com.miirrr.qrscan.services.keyboardlayout.KeyboardLayoutService;
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimerTask;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -41,7 +44,10 @@ import javax.swing.plaf.basic.BasicScrollBarUI;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.text.StyleContext;
 
-
+/**
+ * Главное окно приложения.
+ * Отвечает за выбор города и магазина, сканирование кодов и переключение вида продукции.
+ */
 public class MainGUI {
     private JTextField qrcodeField;
     private JPanel rootPanel;
@@ -52,6 +58,8 @@ public class MainGUI {
     private JPanel bottomPanel;
     private JTable cityTable;
     private JTable shopTable;
+    private JComboBox<ProductType> productTypeBox;
+    private JFrame mainFrame;
 
     private static final ShopService shopService = new ShopServiceImpl();
 
@@ -63,12 +71,16 @@ public class MainGUI {
 
     private static final Config config = Config.getConfig();
 
+    /**
+     * Создает и отображает главное окно приложения.
+     */
     public MainGUI() {
-        JFrame mainFrame = new JFrame();
+        mainFrame = new JFrame();
         mainFrame.setIconImage(config.getLogoImage());
         mainFrame.setMinimumSize(config.getSize());
         mainFrame.setLocationRelativeTo(null);
-        qrcodeField.requestFocus();
+        initProductTypeBox();
+        updateFrameTitle();
 
         actionCityTable(cityTable);
         actionShopTable(shopTable);
@@ -82,8 +94,53 @@ public class MainGUI {
         mainFrame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         mainFrame.pack();
         mainFrame.setVisible(true);
+        qrcodeField.requestFocus();
     }
 
+    /**
+     * Инициализирует выпадающий список выбора вида продукции
+     * и привязывает обработчик смены контекста.
+     */
+    private void initProductTypeBox() {
+        productTypeBox.removeAllItems();
+        for (ProductType productType : ProductType.values()) {
+            productTypeBox.addItem(productType);
+        }
+        productTypeBox.setSelectedItem(ProductTypeContext.getCurrentType());
+        productTypeBox.addActionListener(e -> {
+            ProductType selectedType = (ProductType) productTypeBox.getSelectedItem();
+            ProductTypeContext.setCurrentType(selectedType);
+            updateFrameTitle();
+            refreshTablesByProductType();
+        });
+    }
+
+    /**
+     * Обновляет заголовок окна с учетом активного вида продукции.
+     */
+    private void updateFrameTitle() {
+        mainFrame.setTitle("QRScan - " + ProductTypeContext.getCurrentType().getDisplayName());
+    }
+
+    /**
+     * Перечитывает видимые данные после смены вида продукции.
+     */
+    private void refreshTablesByProductType() {
+        qrcodeField.setText("");
+        qrcodeField.setEnabled(false);
+        shopTable.clearSelection();
+        if (cityTable.getSelectedRow() > -1) {
+            createShopTable(Long.parseLong(cityTable.getValueAt(cityTable.getSelectedRow(), 0).toString()));
+        } else {
+            createShopTable(0);
+        }
+    }
+
+    /**
+     * Регистрирует обработчик ввода QR-кода в главном поле сканирования.
+     *
+     * @param textField поле ввода QR-кода
+     */
     private void actionMainFrame(JTextField textField) {
         textField.addKeyListener(new KeyAdapter() {
             @Override
@@ -120,6 +177,11 @@ public class MainGUI {
         });
     }
 
+    /**
+     * Показывает немодальное сообщение об ошибке.
+     *
+     * @param text текст сообщения
+     */
     private void showErrorMessage(String text) {
         String stringStart = "<HTML><h1>";
         String stringEnd = "</h1></HTML>";
@@ -132,6 +194,12 @@ public class MainGUI {
         dialog.setVisible(true);
     }
 
+    /**
+     * Показывает немодальное уведомление об успешном сканировании.
+     *
+     * @param qrCode сохраненный QR-код
+     * @param shop название магазина
+     */
     private void showMessage(String qrCode, String shop) {
         int timeout_ms = 1500;//3 * 1000 mSec
         String stringStart = "<HTML><h1>";
@@ -146,6 +214,11 @@ public class MainGUI {
         new Timer(timeout_ms, e -> dialog.setVisible(false)).start();
     }
 
+    /**
+     * Подписывает таблицу городов на обновление списка магазинов.
+     *
+     * @param table таблица городов
+     */
     private void actionCityTable(JTable table) {
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && table.getSelectedRow() > -1) {
@@ -155,6 +228,11 @@ public class MainGUI {
         });
     }
 
+    /**
+     * Подписывает таблицу магазинов на выбор строки и открытие окна позиций.
+     *
+     * @param table таблица магазинов
+     */
     private void actionShopTable(JTable table) {
         table.getSelectionModel().addListSelectionListener(e -> {
 //            if (!e.getValueIsAdjusting() && table.getSelectedRow() > -1) {
@@ -188,6 +266,11 @@ public class MainGUI {
         });
     }
 
+    /**
+     * Открывает окно просмотра позиций выбранного магазина за текущий день.
+     *
+     * @param table таблица магазинов
+     */
     private void positionMenuShow(JTable table) {
         int selectedRow = shopTable.getSelectedRow();
         Point positionPoint = shopPane.getViewport().getViewPosition();
@@ -201,10 +284,20 @@ public class MainGUI {
         shopPane.getViewport().setViewPosition(positionPoint);
     }
 
+    /**
+     * Регистрирует открытие окна экспорта.
+     *
+     * @param button кнопка экспорта
+     */
     private void actionExportButton(JButton button) {
         button.addActionListener(e -> new ReportMenu());
     }
 
+    /**
+     * Перестраивает таблицу магазинов для выбранного города.
+     *
+     * @param id идентификатор города, {@code 0} для всех магазинов
+     */
     private void createShopTable(long id) {
         shopTableModel.setRowCount(0);
 
@@ -224,10 +317,18 @@ public class MainGUI {
         shopTable.repaint();
     }
 
+    /**
+     * Подсчитывает количество позиций магазина за текущий день
+     * отдельно по рыбе и напиткам.
+     *
+     * @param shopId идентификатор магазина
+     * @return количество позиций или пустая строка
+     */
     private Object countPositions(long shopId) {
         LocalDateTime startOfToday = LocalDateTime.now().toLocalDate().atStartOfDay();
-        long count = positionService.findByDateAndShopId(startOfToday, startOfToday.plusDays(1), shopId).stream().count();
-        return count > 0 ? count : "";
+        long fishCount = positionService.findByDateAndShopId(startOfToday, startOfToday.plusDays(1), shopId, ProductType.FISH).stream().count();
+        long drinksCount = positionService.findByDateAndShopId(startOfToday, startOfToday.plusDays(1), shopId, ProductType.DRINKS).stream().count();
+        return fishCount == 0 && drinksCount == 0 ? "" : fishCount + "/" + drinksCount;
     }
 
     {
@@ -288,8 +389,14 @@ public class MainGUI {
         shopPane.setViewportView(shopTable);
 
         bottomPanel = new JPanel();
-        bottomPanel.setLayout(new GridLayoutManager(1, 3, new Insets(0, 0, 0, 0), -1, -1));
+        bottomPanel.setLayout(new GridLayoutManager(1, 4, new Insets(0, 0, 0, 0), -1, -1));
         rootPanel.add(bottomPanel, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(-1, 60), new Dimension(-1, 60), new Dimension(-1, 60), 0, true));
+
+        productTypeBox = new JComboBox<>();
+        productTypeBox.setFocusable(false);
+        Font productTypeBoxFont = this.$$$getFont$$$(null, Font.BOLD, 24, productTypeBox.getFont());
+        if (productTypeBoxFont != null) productTypeBox.setFont(productTypeBoxFont);
+        bottomPanel.add(productTypeBox, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(220, 56), new Dimension(220, 56), new Dimension(220, 56), 0, false));
 
         exitButton = new JButton();
         exitButton.setFocusable(false);
@@ -297,7 +404,7 @@ public class MainGUI {
         if (exitButtonFont != null) exitButton.setFont(exitButtonFont);
         exitButton.setLabel("ВЫХОД");
         exitButton.setText("ВЫХОД");
-        bottomPanel.add(exitButton, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(-1, 56), new Dimension(-1, 56), new Dimension(-1, 56), 0, false));
+        bottomPanel.add(exitButton, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(-1, 56), new Dimension(-1, 56), new Dimension(-1, 56), 0, false));
 
         exportButton = new JButton();
         exportButton.setFocusable(false);
@@ -305,13 +412,13 @@ public class MainGUI {
         if (exportButtonFont != null) exportButton.setFont(exitButtonFont);
         exportButton.setLabel("Экспорт");
         exportButton.setText("Экспорт");
-        bottomPanel.add(exportButton, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(-1, 56), new Dimension(-1, 56), new Dimension(-1, 56), 0, false));
+        bottomPanel.add(exportButton, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(-1, 56), new Dimension(-1, 56), new Dimension(-1, 56), 0, false));
 
         qrcodeField = new JTextField();
         qrcodeField.setEnabled(false);
         Font qrcodeFieldFont = this.$$$getFont$$$(null, -1, 36, qrcodeField.getFont());
         if (qrcodeFieldFont != null) qrcodeField.setFont(qrcodeFieldFont);
-        bottomPanel.add(qrcodeField, new GridConstraints(0, 2, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
+        bottomPanel.add(qrcodeField, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_WEST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_FIXED, null, new Dimension(150, -1), null, 0, false));
     }
 
     private JButton getScrollBarButton(String label) {

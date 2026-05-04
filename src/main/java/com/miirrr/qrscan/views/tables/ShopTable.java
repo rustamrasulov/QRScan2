@@ -46,8 +46,8 @@ public class ShopTable extends JTable {
 
         INSTANCE.getColumnModel().getColumn(0).setMinWidth(0);
         INSTANCE.getColumnModel().getColumn(0).setMaxWidth(0);
-        INSTANCE.getColumnModel().getColumn(2).setMinWidth(60);
-        INSTANCE.getColumnModel().getColumn(2).setMaxWidth(60);
+        INSTANCE.getColumnModel().getColumn(2).setMinWidth(120);
+        INSTANCE.getColumnModel().getColumn(2).setMaxWidth(120);
 
         JTableHeader header = INSTANCE.getTableHeader();
         header.setPreferredSize(new Dimension(-1, 30));

@@ -6,13 +6,25 @@ import com.sun.jna.platform.win32.WinDef.HWND;
 import com.sun.jna.win32.W32APIOptions;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Locale;
 
 public class KeyboardLayoutServiceImpl implements
     KeyboardLayoutService {
 
+    private static final int ENGLISH_US_LAYOUT_CODE = 0x0409;
+    private static final int CYRILLIC_LAYOUT_CODE = 0x0419;
+
+    private static final boolean WINDOWS = System.getProperty("os.name", "")
+        .toLowerCase(Locale.ENGLISH)
+        .contains("win");
+
     @Override
     public boolean isEngUs() {
-        return getCurrentKeyboardLayout().containsKey(0x0409);
+        if (!WINDOWS) {
+            return true;
+        }
+
+        return getCurrentKeyboardLayout().containsKey(ENGLISH_US_LAYOUT_CODE);
     }
 
     @Override
@@ -20,24 +32,34 @@ public class KeyboardLayoutServiceImpl implements
         int layoutCode = 0;
         String layoutName;
 
-        User32 user32 = User32.INSTANCE;
-        HWND hWnd = user32.GetForegroundWindow();
-        if (hWnd != null) {
-            int threadId = User32.INSTANCE.GetWindowThreadProcessId(hWnd, (int[]) null);
-            HKL keyboardLayoutHKL = User32.INSTANCE.GetKeyboardLayout(threadId);
-            if (keyboardLayoutHKL != null) {
-                layoutCode = keyboardLayoutHKL.getLanguageIdentifier() & 0xFFFF;
-
+        if (WINDOWS) {
+            try {
+                User32 user32 = User32Holder.INSTANCE;
+                HWND hWnd = user32.GetForegroundWindow();
+                if (hWnd != null) {
+                    int threadId = user32.GetWindowThreadProcessId(hWnd, (int[]) null);
+                    HKL keyboardLayoutHKL = user32.GetKeyboardLayout(threadId);
+                    if (keyboardLayoutHKL != null) {
+                        layoutCode = keyboardLayoutHKL.getLanguageIdentifier() & 0xFFFF;
+                    }
+                }
+            } catch (Throwable ignored) {
+                layoutCode = ENGLISH_US_LAYOUT_CODE;
             }
+        } else {
+            layoutCode = ENGLISH_US_LAYOUT_CODE;
         }
 
         switch (layoutCode) {
-            case 0x0409:
+            case ENGLISH_US_LAYOUT_CODE:
                 layoutName = "English (United States)";
-            case 0x0419:
+                break;
+            case CYRILLIC_LAYOUT_CODE:
                 layoutName = "Russian";
+                break;
             default:
                 layoutName = "Unknown";
+                break;
         }
 
         Map<Integer, String> result = new HashMap<>();
@@ -48,12 +70,17 @@ public class KeyboardLayoutServiceImpl implements
 
     interface User32 extends com.sun.jna.platform.win32.User32 {
 
-        User32 INSTANCE = Native.load("user32", User32.class, W32APIOptions.DEFAULT_OPTIONS);
-
         HKL GetKeyboardLayout(int idThread);
 
         HWND GetForegroundWindow();
 
         int GetWindowThreadProcessId(HWND hWnd, int[] lpdwProcessId);
+    }
+
+    private static final class User32Holder {
+        private static final User32 INSTANCE = Native.load("user32", User32.class, W32APIOptions.DEFAULT_OPTIONS);
+
+        private User32Holder() {
+        }
     }
 }

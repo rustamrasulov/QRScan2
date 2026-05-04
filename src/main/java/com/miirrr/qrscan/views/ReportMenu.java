@@ -3,6 +3,8 @@ package com.miirrr.qrscan.views;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.miirrr.qrscan.config.Config;
+import com.miirrr.qrscan.entities.ProductType;
+import com.miirrr.qrscan.services.entities.ProductTypeContext;
 import com.miirrr.qrscan.entities.Shop;
 import com.miirrr.qrscan.services.engine.ReportExport;
 import com.miirrr.qrscan.services.entities.ShopService;
@@ -24,6 +26,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -44,10 +47,12 @@ public class ReportMenu {
     private JButton saveButton;
 
     private JComboBox<String> ipBox;
+    private JComboBox<String> productTypeBox;
     private JXDatePicker pickerFrom;
     private JXDatePicker pickerTo;
 
     private DefaultComboBoxModel<String> defaultComboBoxIpModel;
+    private DefaultComboBoxModel<String> defaultProductTypeModel;
 
     private static final ShopService shopService = new ShopServiceImpl();
 
@@ -61,12 +66,18 @@ public class ReportMenu {
         mainFrame.setIconImage(config.getLogoImage());
         mainFrame.setModal(true);
         mainFrame.setModalityType(Dialog.ModalityType.APPLICATION_MODAL);
+        mainFrame.setTitle("Экспорт - " + ProductTypeContext.getCurrentType().getDisplayName());
 
         closeButton.addActionListener(e -> mainFrame.dispose());
 
         setIpBox();
+        setProductTypeBox();
         setFilterButtonAction(filterButton);
         setSaveButtonAction(saveButton);
+        ipBox.addActionListener(e -> applyFilters());
+        productTypeBox.addActionListener(e -> applyFilters());
+        pickerFrom.addActionListener(e -> applyFilters());
+        pickerTo.addActionListener(e -> applyFilters());
 
         mainFrame.setResizable(false);
         mainFrame.getContentPane().add(rootPanel);
@@ -108,26 +119,15 @@ public class ReportMenu {
         }
     }
 
+    private void setProductTypeBox() {
+        defaultProductTypeModel.addElement("ВСЕ");
+        defaultProductTypeModel.addElement(ProductType.FISH.getDisplayName());
+        defaultProductTypeModel.addElement(ProductType.DRINKS.getDisplayName());
+        productTypeBox.setSelectedIndex(0);
+    }
+
     private void setFilterButtonAction(JButton button) {
-        button.addActionListener(e -> {
-            LocalDateTime dateTimeFrom;
-            LocalDateTime dateTimeTo;
-
-            if (pickerFrom.getDate().equals(pickerTo.getDate())) {
-                dateTimeFrom = pickerFrom.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-                dateTimeTo = dateTimeFrom.plusDays(1);
-            } else {
-                dateTimeFrom = pickerFrom.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-                dateTimeTo = pickerTo.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().plusDays(1);
-            }
-
-            if ((Objects.requireNonNull(ipBox.getSelectedItem())).toString().equals("ВСЕ")) {
-                positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo);
-            } else {
-//                positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo, getIpBoxValue());
-                positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo, getIpBoxLongValue());
-            }
-        });
+        button.addActionListener(e -> applyFilters());
     }
 
     private String getIpBoxValue() {
@@ -141,6 +141,79 @@ public class ReportMenu {
 
     private long getIpBoxLongValue() {
         return shopService.findByName(String.valueOf(ipBox.getSelectedItem())).getId();
+    }
+
+    private ProductType getSelectedProductType() {
+        Object selectedItem = productTypeBox.getSelectedItem();
+        if (selectedItem == null || String.valueOf(selectedItem).trim().isEmpty()) {
+            return null;
+        }
+        if (ProductType.FISH.getDisplayName().equals(selectedItem)) {
+            return ProductType.FISH;
+        }
+        if (ProductType.DRINKS.getDisplayName().equals(selectedItem)) {
+            return ProductType.DRINKS;
+        }
+        return null;
+    }
+
+    private void applyFilters() {
+        if (pickerFrom == null || pickerTo == null || ipBox == null || productTypeBox == null || positionTablePane == null) {
+            return;
+        }
+
+        LocalDateTime dateTimeFrom = getDateTimeFrom();
+        LocalDateTime dateTimeTo = getDateTimeTo();
+
+        if ((Objects.requireNonNull(ipBox.getSelectedItem())).toString().equals("ВСЕ")) {
+            positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo, getSelectedProductType());
+        } else {
+            positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo, getIpBoxLongValue(), getSelectedProductType());
+        }
+        positionTablePane.setViewportView(positionTable);
+    }
+
+    private LocalDateTime getDateTimeFrom() {
+        return pickerFrom.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    }
+
+    private LocalDateTime getDateTimeTo() {
+        if (pickerFrom.getDate().equals(pickerTo.getDate())) {
+            return getDateTimeFrom().plusDays(1);
+        }
+        return pickerTo.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().plusDays(1);
+    }
+
+    private void exportByFilters(ReportExport reportExport, LocalDateTime dateTimeFrom, LocalDateTime dateTimeTo, String outPath) {
+        List<ProductType> productTypesToExport = new ArrayList<>();
+        ProductType selectedProductType = getSelectedProductType();
+
+        if (selectedProductType == null) {
+            productTypesToExport.add(ProductType.FISH);
+            productTypesToExport.add(ProductType.DRINKS);
+        } else {
+            productTypesToExport.add(selectedProductType);
+        }
+
+        if ((Objects.requireNonNull(ipBox.getSelectedItem())).toString().equals("ВСЕ")) {
+            for (ProductType productType : productTypesToExport) {
+                reportExport.export(dateTimeFrom, dateTimeTo, null, outPath, false, productType);
+            }
+        } else {
+            long shopId = getIpBoxLongValue();
+            for (ProductType productType : productTypesToExport) {
+                reportExport.exportOneShop(dateTimeFrom, dateTimeTo, shopId, outPath, productType);
+            }
+        }
+    }
+
+    private void resetFilters() {
+        Date now = Calendar.getInstance().getTime();
+        ipBox.setSelectedIndex(0);
+        productTypeBox.setSelectedIndex(0);
+        pickerFrom.setDate(now);
+        pickerTo.setDate(now);
+        applyFilters();
     }
 
     private void setSaveButtonAction(JButton button) {
@@ -167,21 +240,11 @@ public class ReportMenu {
                 LocalDateTime dateTimeTo;
                 outPath = chooser.getSelectedFile().getAbsolutePath();
 
-                if (pickerFrom.getDate().equals(pickerTo.getDate())) {
-                    dateTimeFrom = pickerFrom.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-                    dateTimeTo = dateTimeFrom.plusDays(1);
-                } else {
-                    dateTimeFrom = pickerFrom.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-                    dateTimeTo = pickerTo.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().plusDays(1);
-                }
-                if ((Objects.requireNonNull(ipBox.getSelectedItem())).toString().equals("ВСЕ")) {
-                    reportExport.export(dateTimeFrom, dateTimeTo, null, outPath, false);
-                    positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo);
-                } else {
-                    reportExport.exportOneShop(dateTimeFrom, dateTimeTo, getIpBoxLongValue(), outPath);
-                    ipBox.setSelectedIndex(0);
-                    positionTable = PositionTable.getInstance(dateTimeFrom, dateTimeTo);
-                }
+                dateTimeFrom = getDateTimeFrom();
+                dateTimeTo = getDateTimeTo();
+
+                exportByFilters(reportExport, dateTimeFrom, dateTimeTo, outPath);
+                resetFilters();
             }
         });
     }
@@ -209,7 +272,7 @@ public class ReportMenu {
         topPanel.setLayout(new GridLayoutManager(2, 1, new Insets(0, 0, 0, 0), -1, -1));
         rootPanel.add(topPanel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         JPanel boxPanel = new JPanel();
-        boxPanel.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
+        boxPanel.setLayout(new GridLayoutManager(1, 2, new Insets(0, 0, 0, 0), -1, -1));
         topPanel.add(boxPanel, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
         ipBox = new CustomComboBox<String>();
         ipBox.setPreferredSize(new Dimension(50, 50));
@@ -219,6 +282,14 @@ public class ReportMenu {
         defaultComboBoxIpModel = new DefaultComboBoxModel<>();
         ipBox.setModel(defaultComboBoxIpModel);
         boxPanel.add(ipBox, new GridConstraints(0, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
+        productTypeBox = new CustomComboBox<String>();
+        productTypeBox.setPreferredSize(new Dimension(50, 50));
+        productTypeBox.setBorder(LineBorder.createGrayLineBorder());
+        Font productTypeBoxFont = this.$$$getFont$$$(null, -1, 32, productTypeBox.getFont());
+        if (productTypeBoxFont != null) productTypeBox.setFont(productTypeBoxFont);
+        defaultProductTypeModel = new DefaultComboBoxModel<>();
+        productTypeBox.setModel(defaultProductTypeModel);
+        boxPanel.add(productTypeBox, new GridConstraints(0, 1, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_SHRINK, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, new Dimension(160, -1), new Dimension(160, -1), new Dimension(160, -1), 0, false));
         JPanel datePanel = new JPanel();
         datePanel.setLayout(new GridLayoutManager(1, 4, new Insets(0, 0, 0, 0), -1, -1));
         topPanel.add(datePanel, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_CAN_GROW, null, null, null, 0, false));
@@ -249,7 +320,7 @@ public class ReportMenu {
         datePanel.add(saveButton, new GridConstraints(0, 3, 1, 1, GridConstraints.ANCHOR_EAST, GridConstraints.FILL_HORIZONTAL, GridConstraints.SIZEPOLICY_CAN_GROW, GridConstraints.SIZEPOLICY_FIXED, new Dimension(200, 56), new Dimension(200, 56), new Dimension(200, 56), 0, false));
         positionTablePane = new JScrollPane();
         rootPanel.add(positionTablePane, new GridConstraints(1, 0, 1, 1, GridConstraints.ANCHOR_CENTER, GridConstraints.FILL_BOTH, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, GridConstraints.SIZEPOLICY_CAN_SHRINK | GridConstraints.SIZEPOLICY_WANT_GROW, null, null, null, 0, false));
-        positionTable = PositionTable.getInstance(LocalDateTime.now().toLocalDate().atStartOfDay(), LocalDateTime.now().toLocalDate().atStartOfDay().plusDays(1));
+        positionTable = PositionTable.getInstance(LocalDateTime.now().toLocalDate().atStartOfDay(), LocalDateTime.now().toLocalDate().atStartOfDay().plusDays(1), (ProductType) null);
         positionTablePane.setViewportView(positionTable);
         bottomPanel = new JPanel();
         bottomPanel.setLayout(new GridLayoutManager(1, 1, new Insets(0, 0, 0, 0), -1, -1));
